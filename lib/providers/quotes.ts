@@ -59,6 +59,21 @@ export function parseStooq(csv: string): Bar[] {
   return csv.trim().split(/\r?\n/).slice(1).map(l => l.split(",")).filter(c => c.length >= 5 && !isNaN(+c[4]))
     .map(c => ({ t: Date.parse(c[0]), c: +c[4] }));
 }
+const BROWSER_UA = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" };
+export function parseYahoo(j: any): Bar[] {
+  const r = j?.chart?.result?.[0]; const ts: number[] = r?.timestamp ?? []; const cl: (number | null)[] = r?.indicators?.quote?.[0]?.close ?? [];
+  return ts.map((t, i) => ({ t: t * 1000, c: cl[i] as number })).filter(b => b.c != null && !isNaN(b.c));
+}
+async function yahooBars(sym: string, qs: string): Promise<Bar[]> {
+  await throttle("yahoo", 300);
+  const j = await getJson<any>(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&${qs}`, 8000, BROWSER_UA);
+  const b = parseYahoo(j); if (!b.length) throw new Error("yahoo empty " + sym); return b;
+}
+/** Daily bars: Yahoo Finance first (works from cloud hosts), Stooq as fallback. */
+async function dailyBars(def: AssetDef, range = "3mo"): Promise<{ bars: Bar[]; src: string }> {
+  if (def.yahoo) { try { return { bars: await yahooBars(def.yahoo, `range=${range}`), src: "Yahoo Finance (daily, delayed)" }; } catch { /* fall back */ } }
+  return { bars: await stooqBars(def.stooq!), src: "Stooq (daily close, delayed)" };
+}
 async function stooqBars(sym: string): Promise<Bar[]> {
   await throttle("stooq", 400);
   const bars = parseStooq(await getText(`https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=d`));
@@ -70,10 +85,10 @@ export async function fetchStooqQuotes(): Promise<Quote[]> {
   const out: Quote[] = [];
   for (const d of defs) {
     try {
-      const b = await stooqBars(d.stooq!);
+      const { bars: b, src } = await dailyBars(d);
       const last = b.at(-1)!, prev = b.at(-2), wk = b.at(-6);
       out.push({ id: d.id, symbol: d.symbol, name: d.name, cls: d.cls, price: last.c, change24h: prev ? pct(last.c, prev.c) : null, change7d: wk ? pct(last.c, wk.c) : null,
-        spark: b.slice(-30).map(x => x.c), source: "Stooq (daily close, delayed)", asOf: new Date(last.t).toISOString(), delayed: true });
+        spark: b.slice(-30).map(x => x.c), source: src, asOf: new Date(last.t).toISOString(), delayed: true });
     } catch { /* skip; reported as unavailable */ }
   }
   return out;
@@ -100,7 +115,7 @@ export async function getHistory(id: string, days = 90): Promise<Bar[]> {
     if (def.pair) { const s = await fetchFxSeries(days);
       return s.dates.map((d, i) => ({ t: Date.parse(d), c: pairPrice(def, s.rates[i]) as number })).filter(b => b.c);
     }
-    if (def.stooq) return (await stooqBars(def.stooq)).slice(-days);
+    if (def.stooq) return (await dailyBars(def, days > 120 ? "1y" : "6mo")).bars.slice(-days);
     throw new Error("no history provider for " + id);
   });
   return r.value;
@@ -114,6 +129,7 @@ export async function getHistoryRange(id: string, fromISO: string, toISO: string
       const j = await getJson<any>(`https://api.frankfurter.dev/v1/${fromISO}..${toISO}?base=USD&symbols=${CCY.join(",")}`);
       return Object.keys(j.rates).sort().map(d => ({ t: Date.parse(d), c: pairPrice(def, j.rates[d]) as number })).filter(b => b.c);
     }
+    if (def.yahoo) { try { return await yahooBars(def.yahoo, `period1=${Math.floor(Date.parse(fromISO) / 1000)}&period2=${Math.floor(Date.parse(toISO) / 1000)}`); } catch { /* fall back */ } }
     if (def.stooq) { await throttle("stooq", 400);
       const a = fromISO.replace(/-/g, ""), b = toISO.replace(/-/g, "");
       return parseStooq(await getText(`https://stooq.com/q/d/l/?s=${encodeURIComponent(def.stooq)}&d1=${a}&d2=${b}&i=d`));

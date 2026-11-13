@@ -20,7 +20,7 @@ Optional env vars (server-side only, never sent to the browser): `FRED_API_KEY`,
 |---|---|---|
 | Crypto prices, market cap, volume, history | CoinGecko public API | rate-limited; free history ≈ 1 year |
 | Forex | ExchangeRate-API (open) + ECB via Frankfurter | daily/delayed — labelled |
-| Gold, oil, indices | Stooq daily CSV | end-of-day, delayed — labelled |
+| Gold, oil, indices | Yahoo Finance chart API (fallback: Stooq CSV) | end-of-day, delayed — labelled |
 | News | BBC, CNBC, Al Jazeera, Guardian, CoinDesk, Cointelegraph, Fed, ECB RSS + GDELT (+ NewsAPI if key set) | cached 2–10 min |
 | Calendar | Curated official central-bank schedules + Forex Factory weekly JSON | no events are invented |
 

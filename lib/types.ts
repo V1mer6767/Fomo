@@ -1,5 +1,5 @@
 export type AssetClass = "crypto" | "forex" | "commodity" | "index" | "rates";
-export interface AssetDef { id: string; symbol: string; name: string; cls: AssetClass; cg?: string; stooq?: string; pair?: [string, string]; aliases: string[] }
+export interface AssetDef { id: string; symbol: string; name: string; cls: AssetClass; cg?: string; stooq?: string; yahoo?: string; pair?: [string, string]; aliases: string[] }
 export interface Quote {
   id: string; symbol: string; name: string; cls: AssetClass; price: number | null;
   change24h: number | null; change7d: number | null; volume?: number | null; marketCap?: number | null;

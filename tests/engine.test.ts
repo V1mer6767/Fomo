@@ -40,3 +40,8 @@ test("tariff headline does not trigger conflict rule", () => {
   const ev = groupEvents(buildArticles([raw("Trump announces new tariffs as trade tensions escalate", "BBC News", "https://b.com/t")]))[0];
   assert.ok(!analyzeEvent(ev).sections.why.includes("armed conflict"));
 });
+import { parseYahoo } from "../lib/providers/quotes";
+test("yahoo chart parse skips null closes", () => {
+  const b = parseYahoo({ chart: { result: [{ timestamp: [1, 2, 3], indicators: { quote: [{ close: [10, null, 12] }] } }] } });
+  assert.equal(b.length, 2); assert.equal(b[1].c, 12);
+});
