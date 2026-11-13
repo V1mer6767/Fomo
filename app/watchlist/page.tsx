@@ -14,6 +14,5 @@ export default function Watchlist() {
       <Link href={`/assets/${id}`} className="min-w-0 flex-1"><div className="font-semibold">{a?.symbol ?? id}</div><div className="text-[11px] text-mute">{a?.name}</div></Link>
       <div className="w-24 hidden sm:block"><Spark data={q?.spark} up={(q?.change7d ?? 0) >= 0} h={28} /></div>
       <div className="text-right"><div className="num">{fmtPrice(q?.price)}</div><Change v={q?.change24h} /></div><button className="btn !px-2" aria-label="Remove" onClick={() => w.toggle(id)}><X size={13} /></button></div>); })}
-      {!w.list.length && <p className="p-4 text-sm text-mute">Your watchlist is empty.</p>}</div>
-    <p className="text-[11px] text-mute">Stored in this browser (localStorage). See README for the optional Supabase sync schema.</p></div>);
+      {!w.list.length && <p className="p-4 text-sm text-mute">Your watchlist is empty.</p>}</div></div>);
 }

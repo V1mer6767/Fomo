@@ -12,7 +12,6 @@ export default function Events() {
   const byDay = list.reduce<Record<string, typeof list>>((m, e) => { const k = new Date(e.date).toDateString(); (m[k] ??= []).push(e); return m; }, {});
   return (<div className="space-y-4"><h1 className="text-xl font-bold">Global Political & Economic Calendar</h1>
     <Banner errors={c.env?.errors} source={c.env?.source} at={c.env?.fetchedAt} />
-    <p className="text-xs text-mute">Events come only from official schedules or third-party calendar feeds — none are invented. Central-bank dates are curated from official calendars; confirm at the linked source. Election and political-event coverage is limited to what feeds provide.</p>
     <div className="flex flex-wrap gap-2">{["today", "tomorrow", "week", "month"].map(v => <button key={v} className={`btn ${view === v ? "!border-info text-info" : ""}`} onClick={() => setView(v)}>{v}</button>)}
       <select className="inp" value={country} onChange={e => setCountry(e.target.value)}><option value="">All countries</option>{Object.entries(COUNTRY_NAMES).map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>
       <select className="inp" value={imp} onChange={e => setImp(e.target.value)}><option value="">Any impact</option><option>high</option><option>medium</option><option>low</option></select>

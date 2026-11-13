@@ -13,5 +13,5 @@ export default function Assets() {
       <tbody>{rows.map(q => <tr key={q.id} className="border-t border-line hover:bg-panel2"><td className="p-3"><Link href={`/assets/${q.id}`} className="font-semibold hover:text-info">{q.symbol}</Link><div className="text-[11px] text-mute">{q.name}</div></td>
         <td className="p-3 text-right num">{fmtPrice(q.price)}</td><td className="p-3 text-right"><Change v={q.change24h} /></td><td className="p-3 text-right"><Change v={q.change7d} /></td>
         <td className="p-3 w-32 hidden md:table-cell"><Spark data={q.spark} up={(q.change7d ?? 0) >= 0} h={28} /></td><td className="p-3 text-right num hidden md:table-cell">{fmtBig(q.volume)}</td></tr>)}</tbody></table></div>}
-    <p className="text-[11px] text-mute">Index and commodity data are end-of-day (delayed). Forex uses ECB reference rates plus a delayed public feed.</p></div>);
+    </div>);
 }

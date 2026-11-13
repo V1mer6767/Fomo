@@ -14,7 +14,6 @@ export default function Alerts() {
     setRules([...rules, { id: String(Date.now()), kind, asset: needsAsset || (kind === "high-importance" && asset !== "ANY") ? asset : undefined, value: needsVal ? +value : undefined, keyword: kind === "news-keyword" ? kw.trim() : undefined, enabled: true }]); setValue(""); setKw(""); };
   const perm = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
   return (<div className="space-y-5"><h1 className="text-xl font-bold">Alerts</h1>
-    <p className="text-xs text-mute">Rules are checked while this app is open in your browser. Alerts are plain notifications of conditions you defined — nothing is sent externally.</p>
     <section className="card p-4 flex flex-wrap gap-2 items-end">
       <select className="inp" value={kind} onChange={e => setKind(e.target.value as any)}>{KINDS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
       {(needsAsset || kind === "high-importance") && <select className="inp" value={asset} onChange={e => setAsset(e.target.value)}>{kind === "high-importance" && <option value="ANY">Any asset</option>}{ASSETS.map(a => <option key={a.id} value={a.id}>{a.symbol}</option>)}</select>}

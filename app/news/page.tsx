@@ -27,7 +27,6 @@ function Inner() {
       <Sel v={sort} set={setSort} ph="" opts={[["new", "Newest first"], ["impact", "Strongest market impact first"]]} />
       <Sel v={days} set={setDays} ph="" opts={[["1", "Last 24h"], ["3", "Last 3 days"]]} />
     </div>
-    <div className="flex flex-wrap items-center gap-3 text-xs text-mute"><span>Impact meter:</span><ImpactMeter score={80} /><ImpactMeter score={50} /><ImpactMeter score={15} /><span>(potential to move markets — an estimate, not a forecast)</span></div>
     <div className="text-xs text-mute">{list.length} articles · {n.events.length} events (similar reports are grouped)</div>
     {n.loading && !n.articles.length ? <Loading n={5} /> : <div className="grid gap-3 lg:grid-cols-2">{shown.slice(0, 80).map(a => <NewsCard key={a.id} a={a} />)}</div>}
     {!n.loading && !list.length && <p className="text-mute">No articles match these filters.</p>}
