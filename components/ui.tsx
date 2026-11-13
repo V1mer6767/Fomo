@@ -14,11 +14,11 @@ export function Spark({ data, up, h = 36 }: { data?: number[]; up: boolean; h?: 
   const c = up ? "rgb(var(--up))" : "rgb(var(--down))";
   return <div style={{ height: h }}><ResponsiveContainer width="100%" height="100%"><LineChart data={data.map((v, i) => ({ i, v }))}><YAxis hide domain={["dataMin", "dataMax"]} /><Line dataKey="v" stroke={c} strokeWidth={1.5} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>;
 }
-export function PriceChart({ data, h = 260 }: { data: { t: number; c: number }[]; h?: number }) {
+export function PriceChart({ data, h = 260, intraday = false }: { data: { t: number; c: number }[]; h?: number; intraday?: boolean }) {
   if (!data.length) return <div className="text-mute text-sm p-6">No chart data available.</div>;
   const up = data.at(-1)!.c >= data[0].c; const c = up ? "rgb(var(--up))" : "rgb(var(--down))";
   return <div style={{ height: h }}><ResponsiveContainer><AreaChart data={data}><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={c} stopOpacity={0.3} /><stop offset="100%" stopColor={c} stopOpacity={0} /></linearGradient></defs>
-    <XAxis dataKey="t" tickFormatter={t => new Date(t).toLocaleDateString("en", { month: "short", day: "numeric" })} stroke="rgb(var(--mute))" fontSize={10} minTickGap={40} />
+    <XAxis dataKey="t" tickFormatter={t => intraday ? new Date(t).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" }) : new Date(t).toLocaleDateString("en", { month: "short", day: "numeric" })} stroke="rgb(var(--mute))" fontSize={10} minTickGap={40} />
     <YAxis domain={["auto", "auto"]} stroke="rgb(var(--mute))" fontSize={10} width={52} tickFormatter={v => fmtPrice(v)} />
     <Tooltip contentStyle={{ background: "rgb(var(--panel2))", border: "1px solid rgb(var(--line))", borderRadius: 8, fontSize: 12 }} labelFormatter={t => new Date(t as number).toLocaleString()} formatter={(v: any) => [fmtPrice(v), "Price"]} />
     <Area dataKey="c" stroke={c} strokeWidth={2} fill="url(#g)" isAnimationActive={false} /></AreaChart></ResponsiveContainer></div>;

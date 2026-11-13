@@ -50,3 +50,9 @@ test("impact strength ranks central bank above generic crypto chatter", () => {
   const f = (k: string) => ev.find(e => e.title.toLowerCase().includes(k))!.impactScore;
   assert.ok(f("fed") >= 65); assert.ok(f("fed") > f("bitcoin")); assert.ok(f("football") < 35);
 });
+import { aggregate } from "../lib/providers/quotes";
+test("aggregate 1h bars into 4h candles", () => {
+  const h = 3600e3, t0 = Date.UTC(2026, 0, 1, 0);
+  const bars = [0, 1, 2, 3, 4].map(i => ({ t: t0 + i * h, o: 10 + i, h: 12 + i, l: 9 + i, c: 11 + i }));
+  const a = aggregate(bars, 4); assert.equal(a.length, 2); assert.equal(a[0].o, 10); assert.equal(a[0].h, 15); assert.equal(a[0].l, 9); assert.equal(a[0].c, 14);
+});

@@ -65,9 +65,9 @@ export function parseYahoo(j: any): Bar[] {
   const cl: (number | null)[] = q.close ?? [], op: (number | null)[] = q.open ?? [], hi: (number | null)[] = q.high ?? [], lo: (number | null)[] = q.low ?? [];
   return ts.map((t, i) => ({ t: t * 1000, c: cl[i] as number, o: op[i] ?? undefined, h: hi[i] ?? undefined, l: lo[i] ?? undefined } as Bar)).filter(b => b.c != null && !isNaN(b.c));
 }
-async function yahooBars(sym: string, qs: string): Promise<Bar[]> {
+async function yahooBars(sym: string, qs: string, interval = "1d"): Promise<Bar[]> {
   await throttle("yahoo", 300);
-  const j = await getJson<any>(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&${qs}`, 8000, BROWSER_UA);
+  const j = await getJson<any>(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&${qs}`, 8000, BROWSER_UA);
   const b = parseYahoo(j); if (!b.length) throw new Error("yahoo empty " + sym); return b;
 }
 /** Daily bars: Yahoo Finance first (works from cloud hosts), Stooq as fallback. */
@@ -148,4 +148,29 @@ export async function getHistoryRange(id: string, fromISO: string, toISO: string
     }
     throw new Error("no provider");
   })).value;
+}
+
+/* ---------- Intraday timeframes (Yahoo Finance; delayed, availability varies by asset) ---------- */
+export const TIMEFRAMES: Record<string, { interval: string; range: string; ttl: number; agg?: number }> = {
+  "1m": { interval: "1m", range: "1d", ttl: 30_000 }, "5m": { interval: "5m", range: "5d", ttl: 60_000 }, "15m": { interval: "15m", range: "5d", ttl: 120_000 },
+  "30m": { interval: "30m", range: "1mo", ttl: 180_000 }, "1h": { interval: "1h", range: "1mo", ttl: 300_000 }, "4h": { interval: "1h", range: "3mo", ttl: 600_000, agg: 4 },
+};
+export function aggregate(bars: Bar[], hours: number): Bar[] {
+  const ms = hours * 3600e3; const out: Bar[] = [];
+  for (const b of bars) {
+    const k = Math.floor(b.t / ms) * ms; const last = out.at(-1);
+    if (last && last.t === k) { last.c = b.c; if (b.h != null) last.h = Math.max(last.h ?? b.h, b.h); if (b.l != null) last.l = Math.min(last.l ?? b.l, b.l); }
+    else out.push({ t: k, o: b.o ?? b.c, h: b.h ?? b.c, l: b.l ?? b.c, c: b.c });
+  }
+  return out;
+}
+export async function getIntraday(id: string, tf: string): Promise<Bar[]> {
+  const def = asset(id); const T = TIMEFRAMES[tf];
+  if (!def || !T) throw new Error("unknown asset or timeframe");
+  if (!def.yahoo) throw new Error("no intraday data for this asset");
+  const r = await cached(`intra:${id}:${tf}`, T.ttl, async () => {
+    const bars = await yahooBars(def.yahoo!, `range=${T.range}`, T.interval);
+    return (T.agg ? aggregate(bars, T.agg) : bars).slice(-180);
+  });
+  return r.value;
 }
