@@ -1,0 +1,26 @@
+import type { AssetDef } from "./types";
+export const ASSETS: AssetDef[] = [
+  { id: "BTC", symbol: "BTC", name: "Bitcoin", cls: "crypto", cg: "bitcoin", aliases: ["bitcoin", "btc"] },
+  { id: "ETH", symbol: "ETH", name: "Ethereum", cls: "crypto", cg: "ethereum", aliases: ["ethereum", "ether", "eth"] },
+  { id: "SOL", symbol: "SOL", name: "Solana", cls: "crypto", cg: "solana", aliases: ["solana"] },
+  { id: "XRP", symbol: "XRP", name: "XRP", cls: "crypto", cg: "ripple", aliases: ["xrp", "ripple"] },
+  { id: "BNB", symbol: "BNB", name: "BNB", cls: "crypto", cg: "binancecoin", aliases: ["bnb", "binance coin"] },
+  { id: "ADA", symbol: "ADA", name: "Cardano", cls: "crypto", cg: "cardano", aliases: ["cardano"] },
+  { id: "DOGE", symbol: "DOGE", name: "Dogecoin", cls: "crypto", cg: "dogecoin", aliases: ["dogecoin"] },
+  { id: "EURUSD", symbol: "EUR/USD", name: "Euro / US Dollar", cls: "forex", pair: ["EUR", "USD"], aliases: ["euro", "eur"] },
+  { id: "GBPUSD", symbol: "GBP/USD", name: "Pound / US Dollar", cls: "forex", pair: ["GBP", "USD"], aliases: ["pound", "sterling", "gbp"] },
+  { id: "USDJPY", symbol: "USD/JPY", name: "US Dollar / Yen", cls: "forex", pair: ["USD", "JPY"], aliases: ["yen", "jpy"] },
+  { id: "USDCHF", symbol: "USD/CHF", name: "US Dollar / Franc", cls: "forex", pair: ["USD", "CHF"], aliases: ["franc", "chf"] },
+  { id: "AUDUSD", symbol: "AUD/USD", name: "Aussie / US Dollar", cls: "forex", pair: ["AUD", "USD"], aliases: ["aussie", "aud"] },
+  { id: "USDCAD", symbol: "USD/CAD", name: "US Dollar / CAD", cls: "forex", pair: ["USD", "CAD"], aliases: ["cad", "loonie"] },
+  { id: "NZDUSD", symbol: "NZD/USD", name: "Kiwi / US Dollar", cls: "forex", pair: ["NZD", "USD"], aliases: ["nzd", "kiwi"] },
+  { id: "XAU", symbol: "XAU/USD", name: "Gold", cls: "commodity", stooq: "xauusd", aliases: ["gold", "bullion"] },
+  { id: "WTI", symbol: "WTI", name: "Crude Oil (WTI)", cls: "commodity", stooq: "cl.f", aliases: ["oil", "crude", "wti", "brent", "opec"] },
+  { id: "SPX", symbol: "S&P 500", name: "S&P 500", cls: "index", stooq: "^spx", aliases: ["s&p", "s&p 500", "wall street", "stocks"] },
+  { id: "NDX", symbol: "NASDAQ 100", name: "Nasdaq 100", cls: "index", stooq: "^ndx", aliases: ["nasdaq", "tech stocks"] },
+  { id: "DJI", symbol: "DOW", name: "Dow Jones", cls: "index", stooq: "^dji", aliases: ["dow"] },
+  { id: "DAX", symbol: "DAX", name: "DAX 40", cls: "index", stooq: "^dax", aliases: ["dax"] },
+  { id: "DXY", symbol: "USD", name: "US Dollar (broad)", cls: "forex", aliases: ["dollar", "usd", "greenback"] },
+];
+export const asset = (id: string) => ASSETS.find(a => a.id === id);
+export const ASSET_IDS = ASSETS.map(a => a.id);
