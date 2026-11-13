@@ -1,7 +1,7 @@
 @tailwind base; @tailwind components; @tailwind utilities;
 :root,[data-theme="dark"]{
-  --bg:7 11 20; --panel:13 19 32; --panel2:19 27 44; --line:30 41 62;
-  --fg:226 232 244; --mute:130 142 166; --up:34 197 130; --down:239 83 80; --warn:249 154 42; --info:59 130 246;
+  --bg:0 0 0; --panel:28 28 30; --panel2:44 44 47; --line:62 62 67;
+  --fg:255 255 255; --mute:165 165 172; --up:34 197 130; --down:239 83 80; --warn:249 154 42; --info:59 130 246;
 }
 [data-theme="light"]{
   --bg:243 245 249; --panel:255 255 255; --panel2:238 241 247; --line:218 224 235;
