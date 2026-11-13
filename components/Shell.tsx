@@ -22,7 +22,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
       <aside className={`fixed lg:sticky top-0 z-40 h-screen border-r border-line bg-panel flex flex-col transition-all
         ${collapsed ? "lg:w-[64px]" : "lg:w-[236px]"} w-[236px] ${mobile ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <div className="h-14 flex items-center gap-2 px-4 border-b border-line">
-          {collapsed ? <I.TrendingUp size={20} className="mx-auto text-mute" /> : <div className="font-bold tracking-tight">FOMO <span className="text-mute font-medium">Intel</span></div>}
+          {collapsed ? <I.TrendingUp size={20} className="mx-auto text-mute" /> : <div className="font-bold tracking-tight">Trade <span className="text-mute font-medium">Info</span></div>}
         </div>
         <nav className="flex-1 overflow-y-auto py-2">
           {NAV.map(n => {

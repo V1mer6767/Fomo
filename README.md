@@ -1,4 +1,4 @@
-# FOMO Trading Intelligence
+# Trade Info
 
 Market-intelligence dashboard built around one idea: **News → Affected assets → Possible impact**.
 Next.js 15 (App Router) · React 19 · TypeScript · Tailwind · Recharts. No trades, no brokerage, no price predictions.

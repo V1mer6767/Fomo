@@ -30,7 +30,7 @@ export default function AlertRunner() {
       busy.current = true;
       setRules(next);
       if (fired.length) { setLog([...fired.map(f => ({ ...f, at: new Date().toISOString() })), ...log].slice(0, 100));
-        try { if (typeof Notification !== "undefined" && Notification.permission === "granted") fired.forEach(f => new Notification("FOMO alert", { body: f.text })); } catch {} }
+        try { if (typeof Notification !== "undefined" && Notification.permission === "granted") fired.forEach(f => new Notification("Trade Info alert", { body: f.text })); } catch {} }
       setTimeout(() => (busy.current = false), 500);
     }
   }, [byId, news.env, rules]); // eslint-disable-line
