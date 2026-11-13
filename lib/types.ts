@@ -11,9 +11,9 @@ export type Category = "politics" | "elections" | "wars" | "central-banks" | "cr
 export interface Article {
   id: string; title: string; summary: string; source: string; url: string; publishedAt: string;
   country: string | null; category: Category; importance: Importance; assets: string[];
-  status: Status; eventId: string; demo?: boolean;
+  status: Status; eventId: string; impactScore: number; demo?: boolean;
 }
-export interface EventGroup { id: string; title: string; articles: Article[]; sources: string[]; status: Status; importance: Importance; category: Category; country: string | null; assets: string[]; latest: string }
+export interface EventGroup { id: string; title: string; articles: Article[]; sources: string[]; status: Status; importance: Importance; category: Category; country: string | null; assets: string[]; latest: string; impactScore: number }
 export type Direction = "positive" | "negative" | "mixed" | "uncertain";
 export interface AssetImpact {
   asset: string; direction: Direction; directness: "direct" | "indirect"; mechanism: string;

@@ -33,6 +33,13 @@ export function Banner({ demo, errors, stale, source, at }: { demo?: boolean; er
 }
 export const Loading = ({ n = 3 }: { n?: number }) => <div className="space-y-2">{Array.from({ length: n }).map((_, i) => <div key={i} className="h-14 rounded-xl bg-panel2 animate-pulse" />)}</div>;
 
+export function ImpactMeter({ score, compact }: { score: number; compact?: boolean }) {
+  const lvl = score >= 65 ? { t: "Strong impact", c: "bg-down", x: "text-down" } : score >= 35 ? { t: "Moderate impact", c: "bg-warn", x: "text-warn" } : { t: "Weak impact", c: "bg-mute", x: "text-mute" };
+  const on = Math.max(1, Math.ceil(score / 20));
+  return (<span className="inline-flex items-center gap-1.5" title={`Potential to move markets: ${score}/100 (estimate from story type, directly linked assets and source count — not a forecast)`}>
+    <span className="flex items-end gap-[2px]">{[0, 1, 2, 3, 4].map(i => <span key={i} className={`w-[4px] rounded-sm ${i < on ? lvl.c : "bg-line"}`} style={{ height: 5 + i * 3 }} />)}</span>
+    <span className={`text-[11px] font-semibold ${lvl.x}`}>{compact ? lvl.t.replace(" impact", "") : lvl.t}</span></span>);
+}
 const impCls: Record<Importance, string> = { low: "text-mute", medium: "text-info", high: "text-warn", critical: "text-down" };
 export const ImpBadge = ({ v }: { v: Importance }) => <span className={`chip ${impCls[v]} uppercase`}>{v}</span>;
 const stCls: Record<Status, string> = { confirmed: "text-up", developing: "text-warn", unverified: "text-down" };
@@ -52,7 +59,7 @@ export function QuoteRow({ q }: { q: Quote }) {
 
 export function NewsCard({ a, compact }: { a: Article; compact?: boolean }) {
   return (<div className="card p-4">
-    <div className="flex flex-wrap items-center gap-1.5 mb-1.5"><ImpBadge v={a.importance} /><StatusBadge v={a.status} /><span className="chip">{a.category}</span>{a.country && <span className="chip">{a.country}</span>}</div>
+    <div className="flex flex-wrap items-center gap-1.5 mb-1.5"><ImpactMeter score={a.impactScore} /><ImpBadge v={a.importance} /><StatusBadge v={a.status} /><span className="chip">{a.category}</span>{a.country && <span className="chip">{a.country}</span>}</div>
     <a href={a.url} target="_blank" rel="noopener noreferrer" className="font-semibold leading-snug hover:text-info">{a.title}</a>
     {!compact && a.summary && <p className="mt-1 text-sm text-mute line-clamp-3">{a.summary}</p>}
     <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-mute"><span>{a.source}</span><span>·</span><time title={a.publishedAt}>{ago(a.publishedAt)} ({new Date(a.publishedAt).toLocaleString()})</time>

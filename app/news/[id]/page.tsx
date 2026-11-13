@@ -1,7 +1,7 @@
 "use client";
 import { use } from "react";
 import Link from "next/link";
-import { Banner, ImpactCard, ImpBadge, Loading, NewsCard, Pipeline, StatusBadge } from "@/components/ui";
+import { Banner, ImpactMeter, ImpactCard, ImpBadge, Loading, NewsCard, Pipeline, StatusBadge } from "@/components/ui";
 import { useNews, useQuotes } from "@/lib/hooks";
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +12,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   const s = ev.analysis.sections;
   return (<div className="space-y-5">
     <Link href="/news" className="text-xs text-info">← Live News</Link>
-    <div><div className="flex flex-wrap gap-1.5 mb-2"><ImpBadge v={ev.importance} /><StatusBadge v={ev.status} /><span className="chip">{ev.category}</span>{ev.country && <span className="chip">{ev.country}</span>}</div>
+    <div><div className="flex flex-wrap items-center gap-1.5 mb-2"><ImpactMeter score={ev.impactScore} /><ImpBadge v={ev.importance} /><StatusBadge v={ev.status} /><span className="chip">{ev.category}</span>{ev.country && <span className="chip">{ev.country}</span>}</div>
       <h1 className="text-xl font-bold leading-snug">{ev.title}</h1></div>
     <Banner demo={n.env?.demo} />
     <Pipeline ev={ev} quotes={byId} />

@@ -59,6 +59,20 @@ export function eventStatus(text: string, nDistinctSources: number, official: bo
   return HEDGE.test(text) ? "unverified" : "developing";
 }
 
+/* ---------- market-impact strength (0-100): how much this kind of story has the potential to move markets ---------- */
+const RULE_W: Record<string, number> = { "central-bank": 45, conflict: 32, inflation: 32, jobs: 26, trade: 32, energy: 26, banking: 34, election: 22, "crypto-reg": 24, china: 22, "tech-earnings": 16, "crypto-security": 16, "crypto-general": 10 };
+export function impactStrength(text: string, impacts: AssetImpact[], nSources: number, official: boolean): number {
+  const matched = RULES.filter(r => r.test.test(text));
+  if (!matched.length) return Math.min(10, nSources * 3);
+  const w = matched.map(r => RULE_W[r.id] ?? 10).sort((a, b) => b - a);
+  let s = w[0] + (w[1] ?? 0) * 0.3;
+  s += Math.min(impacts.filter(i => i.directness === "direct").length, 3) * 5;
+  s += Math.min(nSources, 4) * 4 + (official ? 10 : 0);
+  if (CRIT.test(text)) s += 8;
+  return Math.round(Math.min(100, s));
+}
+export const impactLabel = (n: number) => (n >= 65 ? "Strong" : n >= 35 ? "Moderate" : "Weak");
+
 /* ---------- impacts ---------- */
 const mergeDir = (a: Direction, b: Direction): Direction => a === b ? a : (a === "uncertain" ? b : b === "uncertain" ? a : "mixed");
 export function assetsFor(text: string): AssetImpact[] {
@@ -87,7 +101,7 @@ export function buildArticles(raw: RawItem[]): Article[] {
     const cat = classify(text);
     const impacts = assetsFor(text);
     out.push({ id: hash(key), title: r.title, summary: r.summary, source: r.source, url: r.url, publishedAt: r.publishedAt,
-      country: detectCountry(text), category: cat, importance: "low", assets: impacts.map(i => i.asset), status: "developing", eventId: "" });
+      country: detectCountry(text), category: cat, importance: "low", assets: impacts.map(i => i.asset), status: "developing", eventId: "", impactScore: 0 });
   }
   return out;
 }
@@ -113,8 +127,9 @@ export function groupEvents(arts: Article[], official: Set<string> = new Set(["F
     const status = eventStatus(text, sources.length, isOfficial);
     const imp = scoreImportance(text, cat, isOfficial, sources.length, assets.length);
     const id = hash(list.map(a => a.id).sort()[0]);
-    list.forEach(a => { a.eventId = id; a.status = status; a.importance = imp; a.category = cat === "other" ? a.category : cat; });
-    out.push({ id, title: lead.title, articles: list, sources, status, importance: imp, category: cat, country: lead.country ?? list.find(a => a.country)?.country ?? null, assets, latest: lead.publishedAt });
+    const impactScore = impactStrength(text, assetsFor(text), sources.length, isOfficial);
+    list.forEach(a => { a.eventId = id; a.impactScore = impactScore; a.status = status; a.importance = imp; a.category = cat === "other" ? a.category : cat; });
+    out.push({ id, title: lead.title, articles: list, sources, status, importance: imp, category: cat, country: lead.country ?? list.find(a => a.country)?.country ?? null, assets, latest: lead.publishedAt, impactScore });
   });
   return out.sort((a, b) => +new Date(b.latest) - +new Date(a.latest));
 }

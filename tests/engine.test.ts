@@ -45,3 +45,8 @@ test("yahoo chart parse skips null closes", () => {
   const b = parseYahoo({ chart: { result: [{ timestamp: [1, 2, 3], indicators: { quote: [{ close: [10, null, 12] }] } }] } });
   assert.equal(b.length, 2); assert.equal(b[1].c, 12);
 });
+test("impact strength ranks central bank above generic crypto chatter", () => {
+  const ev = groupEvents(buildArticles([raw("Fed cuts interest rates by 25 basis points", "BBC News", "https://b.com/f"), raw("Fed cuts interest rates by 25 basis points, Powell says", "CNBC", "https://c.com/f"), raw("Bitcoin whales move coins", "X", "https://x.com/b"), raw("Local football club wins cup", "Y", "https://y.com/f")]));
+  const f = (k: string) => ev.find(e => e.title.toLowerCase().includes(k))!.impactScore;
+  assert.ok(f("fed") >= 65); assert.ok(f("fed") > f("bitcoin")); assert.ok(f("football") < 35);
+});

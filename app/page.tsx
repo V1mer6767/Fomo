@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Banner, Loading, QuoteRow, ImpBadge, StatusBadge } from "@/components/ui";
+import { Banner, Loading, QuoteRow, ImpactMeter, StatusBadge } from "@/components/ui";
 import Live from "@/components/Live";
 import { ago, useCalendar, useNews, useQuotes } from "@/lib/hooks";
 import { useAlertLog, useWatchlist } from "@/lib/userdata";
@@ -12,7 +12,7 @@ const Card = ({ title, href, children }: { title: string; href?: string; childre
 export default function Overview() {
   const qs = useQuotes(); const news = useNews(); const cal = useCalendar(); const w = useWatchlist(); const [log] = useAlertLog();
   const by = (cls: string, ids?: string[]) => qs.quotes.filter(q => q.cls === cls && (!ids || ids.includes(q.id)));
-  const top = [...news.events].sort((a, b) => ["low", "medium", "high", "critical"].indexOf(b.importance) - ["low", "medium", "high", "critical"].indexOf(a.importance) || +new Date(b.latest) - +new Date(a.latest)).slice(0, 5);
+  const top = [...news.events].sort((a, b) => b.impactScore - a.impactScore || +new Date(b.latest) - +new Date(a.latest)).slice(0, 5);
   const geo = news.events.filter(e => ["wars", "politics", "elections", "trade"].includes(e.category)).slice(0, 4);
   const upcoming = cal.events.filter(e => +new Date(e.date) >= Date.now() - 3600e3).slice(0, 6);
   const lead = top[0];
@@ -24,9 +24,9 @@ export default function Overview() {
         <Card title="Global markets" href="/assets">{qs.loading && !qs.quotes.length ? <Loading /> : by("index").concat(by("commodity")).map(q => <QuoteRow key={q.id} q={q} />)}{!qs.loading && !by("index").length && !by("commodity").length && <p className="px-4 text-sm text-mute">Index/commodity feed unavailable.</p>}</Card>
         <Card title="Crypto" href="/crypto">{by("crypto").slice(0, 5).map(q => <QuoteRow key={q.id} q={q} />)}{!by("crypto").length && !qs.loading && <p className="px-4 text-sm text-mute">Crypto feed unavailable.</p>}</Card>
         <Card title="Forex" href="/forex">{by("forex").filter(q => q.id !== "DXY").slice(0, 5).map(q => <QuoteRow key={q.id} q={q} />)}{!by("forex").length && !qs.loading && <p className="px-4 text-sm text-mute">Forex feed unavailable.</p>}</Card>
-        <Card title="Breaking & top news" href="/news"><div className="px-3 space-y-2">{news.loading && !top.length ? <Loading /> : top.map(e => (
+        <Card title="Top news by market impact" href="/news"><div className="px-3 space-y-2">{news.loading && !top.length ? <Loading /> : top.map(e => (
           <Link key={e.id} href={`/news/${e.id}`} className="block rounded-lg p-2 hover:bg-panel2"><div className="text-sm font-medium leading-snug">{e.title}</div>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5"><ImpBadge v={e.importance} /><StatusBadge v={e.status} /><span className="text-[11px] text-mute">{e.sources.length} src · {ago(e.latest)}</span></div></Link>))}</div></Card>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5"><ImpactMeter score={e.impactScore} compact /><StatusBadge v={e.status} /><span className="text-[11px] text-mute">{e.sources.length} src · {ago(e.latest)}</span></div></Link>))}</div></Card>
         <Card title="Geopolitics" href="/news?cat=wars"><div className="px-3 space-y-1">{geo.length ? geo.map(e => <Link key={e.id} href={`/news/${e.id}`} className="block rounded-lg p-2 text-sm hover:bg-panel2">{e.title}<div className="text-[11px] text-mute">{e.category}{e.country ? " · " + e.country : ""} · {ago(e.latest)}</div></Link>) : <p className="px-1 text-sm text-mute">No geopolitical items right now.</p>}</div></Card>
         <Card title="Upcoming events" href="/events"><div className="px-3 space-y-1">{upcoming.length ? upcoming.map(e => <div key={e.id} className="rounded-lg p-2 text-sm"><div>{e.title}</div><div className="text-[11px] text-mute">{e.country} · {new Date(e.date).toLocaleDateString("en", { month: "short", day: "numeric" })}{e.date.includes("T00:00:00Z") ? "" : " " + new Date(e.date).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })} · {e.impact} impact</div></div>) : <p className="text-sm text-mute px-1">No upcoming events loaded.</p>}</div></Card>
         <Card title="Market intelligence" href="/intelligence"><div className="px-4 text-sm space-y-1.5">{lead ? <><div className="font-medium">{lead.title}</div><p className="text-mute">{lead.analysis.sections.why}</p><p><b className="text-mute">Assets: </b>{lead.analysis.impacts.slice(0, 4).map(i => asset(i.asset)?.symbol).join(", ") || "—"}</p><Link href={`/news/${lead.id}`} className="text-info text-xs">Full analysis →</Link></> : <span className="text-mute">Waiting for news…</span>}</div></Card>
