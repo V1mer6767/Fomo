@@ -3,7 +3,7 @@ import { cached, throttle } from "../cache";
 import { getJson, getText } from "../http";
 import type { AssetDef, Quote } from "../types";
 
-export interface Bar { t: number; c: number }
+export interface Bar { t: number; c: number; o?: number; h?: number; l?: number }
 const iso = () => new Date().toISOString();
 const pct = (a: number, b: number) => (b ? ((a - b) / b) * 100 : null);
 
@@ -61,8 +61,9 @@ export function parseStooq(csv: string): Bar[] {
 }
 const BROWSER_UA = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36" };
 export function parseYahoo(j: any): Bar[] {
-  const r = j?.chart?.result?.[0]; const ts: number[] = r?.timestamp ?? []; const cl: (number | null)[] = r?.indicators?.quote?.[0]?.close ?? [];
-  return ts.map((t, i) => ({ t: t * 1000, c: cl[i] as number })).filter(b => b.c != null && !isNaN(b.c));
+  const r = j?.chart?.result?.[0]; const ts: number[] = r?.timestamp ?? []; const q = r?.indicators?.quote?.[0] ?? {};
+  const cl: (number | null)[] = q.close ?? [], op: (number | null)[] = q.open ?? [], hi: (number | null)[] = q.high ?? [], lo: (number | null)[] = q.low ?? [];
+  return ts.map((t, i) => ({ t: t * 1000, c: cl[i] as number, o: op[i] ?? undefined, h: hi[i] ?? undefined, l: lo[i] ?? undefined } as Bar)).filter(b => b.c != null && !isNaN(b.c));
 }
 async function yahooBars(sym: string, qs: string): Promise<Bar[]> {
   await throttle("yahoo", 300);
@@ -70,8 +71,8 @@ async function yahooBars(sym: string, qs: string): Promise<Bar[]> {
   const b = parseYahoo(j); if (!b.length) throw new Error("yahoo empty " + sym); return b;
 }
 /** Daily bars: Yahoo Finance first (works from cloud hosts), Stooq as fallback. */
-async function dailyBars(def: AssetDef, range = "3mo"): Promise<{ bars: Bar[]; src: string }> {
-  if (def.yahoo) { try { return { bars: await yahooBars(def.yahoo, `range=${range}`), src: "Yahoo Finance (daily, delayed)" }; } catch { /* fall back */ } }
+async function dailyBars(def: AssetDef, range = "3mo", days?: number): Promise<{ bars: Bar[]; src: string }> {
+  if (def.yahoo) { try { return { bars: await yahooBars(def.yahoo, days ? `period1=${Math.floor(Date.now() / 1000) - days * 86400}&period2=${Math.floor(Date.now() / 1000) + 86400}` : `range=${range}`), src: "Yahoo Finance (daily, delayed)" }; } catch { /* fall back */ } }
   return { bars: await stooqBars(def.stooq!), src: "Stooq (daily close, delayed)" };
 }
 async function stooqBars(sym: string): Promise<Bar[]> {
@@ -105,17 +106,24 @@ export async function getAllQuotes(): Promise<{ quotes: Quote[]; errors: string[
 }
 
 /* ---------- History for charts / historical comparison ---------- */
-export async function getHistory(id: string, days = 90): Promise<Bar[]> {
+export async function getHistory(id: string, days = 90, ohlc = false): Promise<Bar[]> {
   const def = asset(id); if (!def) throw new Error("unknown asset");
-  const r = await cached(`hist:${id}:${days}`, 30 * 60_000, async () => {
+  const r = await cached(`hist:${id}:${days}:${ohlc}`, 30 * 60_000, async () => {
+    if (def.cg && ohlc) { await throttle("coingecko", 1500);
+      const d = [1, 7, 14, 30, 90, 180, 365].find(x => x >= days) ?? 365;
+      const j = await getJson<[number, number, number, number, number][]>(`https://api.coingecko.com/api/v3/coins/${def.cg}/ohlc?vs_currency=usd&days=${d}`);
+      return j.map(([t, o, h, l, c]) => ({ t, o, h, l, c }));
+    }
     if (def.cg) { await throttle("coingecko", 1500);
       const j = await getJson<any>(`https://api.coingecko.com/api/v3/coins/${def.cg}/market_chart?vs_currency=usd&days=${days}&interval=daily`);
       return (j.prices as [number, number][]).map(([t, c]) => ({ t, c }));
     }
-    if (def.pair) { const s = await fetchFxSeries(days);
+    if (def.pair) {
+      if (def.yahoo) { try { return await yahooBars(def.yahoo, `period1=${Math.floor(Date.now() / 1000) - days * 86400}&period2=${Math.floor(Date.now() / 1000) + 86400}`); } catch { /* fall back to ECB closes */ } }
+      const s = await fetchFxSeries(days);
       return s.dates.map((d, i) => ({ t: Date.parse(d), c: pairPrice(def, s.rates[i]) as number })).filter(b => b.c);
     }
-    if (def.stooq) return (await dailyBars(def, days > 120 ? "1y" : "6mo")).bars.slice(-days);
+    if (def.stooq) return (await dailyBars(def, "1y", days)).bars;
     throw new Error("no history provider for " + id);
   });
   return r.value;
