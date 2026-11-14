@@ -1,4 +1,5 @@
 "use client";
+import { usePrefs } from "@/lib/userdata";
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Banner, ImpactMeter, Loading, NewsCard } from "@/components/ui";
@@ -10,7 +11,7 @@ import { CATEGORIES, COUNTRY_NAMES } from "@/lib/countries";
 function Inner() {
   const sp = useSearchParams(); const n = useNews();
   const [cat, setCat] = useState(sp.get("cat") ?? ""); const [country, setCountry] = useState(sp.get("country") ?? "");
-  const [imp, setImp] = useState(""); const [asset, setAsset] = useState(""); const [days, setDays] = useState("3"); const [q, setQ] = useState(""); const [sort, setSort] = useState("new");
+  const [imp, setImp] = useState(""); const [asset, setAsset] = useState(""); const [days, setDays] = useState("3"); const [q, setQ] = useState(""); const [prefs] = usePrefs(); const [sortOv, setSort] = useState<string | null>(null); const sort = sortOv ?? prefs.newsSort;
   const list = useMemo(() => n.articles.filter(a => (!cat || a.category === cat) && (!country || a.country === country) && (!imp || a.importance === imp) && (!asset || a.assets.includes(asset))
     && Date.now() - +new Date(a.publishedAt) <= +days * 864e5 && (!q || (a.title + a.summary).toLowerCase().includes(q.toLowerCase()))), [n.articles, cat, country, imp, asset, days, q]);
   const shown = useMemo(() => sort === "impact" ? [...list].sort((a, b) => b.impactScore - a.impactScore || +new Date(b.publishedAt) - +new Date(a.publishedAt)) : list, [list, sort]);

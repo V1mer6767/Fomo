@@ -1,4 +1,5 @@
 "use client";
+import { usePrefs } from "@/lib/userdata";
 import { useState } from "react";
 import Link from "next/link";
 import { Change, Loading, PriceChart } from "./ui";
@@ -9,7 +10,7 @@ const CHIPS = ["BTC", "ETH", "SOL", "SPX", "EURUSD", "XAU"];
 const RANGES: { k: string; tf: string; days: number }[] = [{ k: "Intraday", tf: "15m", days: 1 }, { k: "7D", tf: "1d", days: 7 }, { k: "30D", tf: "1d", days: 30 }, { k: "90D", tf: "1d", days: 90 }, { k: "1Y", tf: "1d", days: 365 }];
 /** Large featured price chart with asset selector and time-range selector. */
 export default function FeaturedChart() {
-  const { byId } = useQuotes(); const [id, setId] = useState("BTC"); const [r, setR] = useState(RANGES[2]);
+  const { byId } = useQuotes(); const [prefs] = usePrefs(); const [idOv, setId] = useState<string | null>(null); const id = idOv ?? prefs.defaultAsset; const [r, setR] = useState(RANGES[2]);
   const q = byId[id]; const hist = useApi<{ t: number; c: number }[]>(`/api/history?id=${id}&tf=${r.tf}&days=${r.days}`, r.tf !== "1d" ? 60_000 : 0);
   return (<section className="card rise p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">

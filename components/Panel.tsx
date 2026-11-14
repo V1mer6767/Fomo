@@ -4,7 +4,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { useNews, useQuotes } from "@/lib/hooks";
 import { asset } from "@/lib/assets";
-import { DirBadge, ImpactMeter, ImpBadge, Pipeline, StatusBadge } from "./ui";
+import { SaveEventBtns, DirBadge, ImpactMeter, ImpBadge, Pipeline, StatusBadge } from "./ui";
 
 const Ctx = createContext<{ open: (id: string) => void }>({ open: () => {} });
 export const usePanel = () => useContext(Ctx);
@@ -28,7 +28,7 @@ function PanelView({ id, close }: { id: string; close: () => void }) {
         <Pipeline ev={ev} quotes={byId} stack />
         <div className="space-y-2">{ev.analysis.impacts.slice(0, 6).map(i => (<div key={i.asset} className="card p-3"><div className="flex items-center justify-between"><Link href={`/assets/${i.asset}`} onClick={close} className="font-semibold hover:text-info">{asset(i.asset)?.symbol ?? i.asset}</Link><DirBadge v={i.direction} /></div><p className="mt-1 text-xs text-mute">{i.mechanism}</p><p className="mt-1 text-xs"><b className="text-mute">Could differ if: </b>{i.alternative}</p></div>))}</div>
         {s && <div className="card card-ai p-4 text-sm space-y-1.5"><div className="font-semibold">AI Market Intelligence</div><p><b className="text-mute">Why it matters: </b>{s.why}</p><p><b className="text-mute">Confidence: </b><span className="uppercase">{s.confidence.level}</span> — {s.confidence.note}</p></div>}
-        <div className="flex flex-wrap gap-2"><Link href={`/news/${ev.id}`} onClick={close} className="btn-p">Open full analysis</Link>{ev.articles[0] && <a className="btn" href={ev.articles[0].url} target="_blank" rel="noopener noreferrer">Read source ↗</a>}</div>
+        <div className="flex flex-wrap gap-2"><Link href={`/news/${ev.id}`} onClick={close} className="btn-p">Open full analysis</Link>{ev.articles[0] && <a className="btn" href={ev.articles[0].url} target="_blank" rel="noopener noreferrer">Read source ↗</a>}<SaveEventBtns ev={ev} /></div>
         <p className="text-[11px] text-mute">Scenarios describe possible mechanisms, not predictions.</p>
       </div>}
     </aside></div>);

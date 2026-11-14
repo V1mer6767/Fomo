@@ -5,9 +5,9 @@ import { Area, AreaChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAx
 import { ago, fmtPct, fmtPrice } from "@/lib/hooks";
 import { asset } from "@/lib/assets";
 import type { Article, AssetImpact, Direction, EventGroup, Importance, Quote, Status } from "@/lib/types";
-import { ChevronDown, ExternalLink, Star } from "lucide-react";
+import { Bookmark, BookmarkCheck, ChevronDown, ExternalLink, Sparkles, Star } from "lucide-react";
 import { usePanel } from "./Panel";
-import { useWatchlist } from "@/lib/userdata";
+import { useFavorites, useSavedAnalyses, useSavedNews, useWatchlist } from "@/lib/userdata";
 
 export const Change = ({ v }: { v: number | null | undefined }) => <span className={`num font-medium ${v == null ? "text-mute" : v >= 0 ? "text-up" : "text-down"}`}>{fmtPct(v)}</span>;
 
@@ -139,7 +139,7 @@ export function NewsCard({ a, compact }: { a: Article; compact?: boolean }) {
     <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-mute"><span>{a.source}</span><span>·</span><time title={new Date(a.publishedAt).toLocaleString()}>{ago(a.publishedAt)}</time>
       <button className="ml-auto inline-flex items-center gap-1 text-info hover:underline" onClick={() => setOpen(!open)} aria-expanded={open}>{open ? "Less" : "More"}<ChevronDown size={12} className={`transition ${open ? "rotate-180" : ""}`} /></button></div>
     {a.assets.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{a.assets.slice(0, open ? 12 : 5).map(x => <Link key={x} href={`/assets/${x}`} className="chip transition hover:border-info/60 hover:text-fg">{asset(x)?.symbol ?? x}</Link>)}</div>}
-    {open && <div className="fade-in mt-3 flex flex-wrap gap-2 border-t border-line/70 pt-3"><button className="btn-p" onClick={() => panel.open(a.eventId)}>AI impact analysis</button><a className="btn" href={a.url} target="_blank" rel="noopener noreferrer">Source <ExternalLink size={12} /></a><Link className="btn" href={`/news/${a.eventId}`}>Full page</Link></div>}
+    {open && <div className="fade-in mt-3 flex flex-wrap gap-2 border-t border-line/70 pt-3"><button className="btn-p" onClick={() => panel.open(a.eventId)}>AI impact analysis</button><a className="btn" href={a.url} target="_blank" rel="noopener noreferrer">Source <ExternalLink size={12} /></a><Link className="btn" href={`/news/${a.eventId}`}>Full page</Link><SaveNewsBtn a={a} /></div>}
   </div>);
 }
 
@@ -172,4 +172,16 @@ export function Pipeline({ ev, quotes, stack }: { ev: EventGroup & { analysis: a
     <Stage i={2}><div className="space-y-2">{imps.slice(0, stack ? 3 : 4).map(i => <div key={i.asset} className="rounded-xl border border-line/60 bg-panel2/40 p-2.5"><div className="flex items-center justify-between gap-2 text-sm"><span className="font-medium">{asset(i.asset)?.symbol ?? i.asset}</span><DirBadge v={i.direction} /></div>{!stack && <p className="mt-1 line-clamp-2 text-xs text-mute">{i.mechanism}</p>}</div>)}{!imps.length && <div className="text-sm text-mute">Nothing to analyse.</div>}</div>
       <div className="mt-2 text-[10px] text-mute">Scenarios, not forecasts.</div></Stage>
   </div>);
+}
+
+export function FavBtn({ id }: { id: string }) { const f = useFavorites(); const on = f.has(id); return <button className="btn !px-2" onClick={() => f.toggle(id)} aria-label={on ? "Remove from favorites" : "Add to favorites"} aria-pressed={on}><Star size={14} className={on ? "fill-pink text-pink" : ""} />{on ? "Favorite" : "Favorite"}</button>; }
+const evNews = (a: Article) => ({ eventId: a.eventId, title: a.title, url: a.url, source: a.source, summary: a.summary?.slice(0, 1000), category: a.category, publishedAt: a.publishedAt });
+export function SaveNewsBtn({ a }: { a: Article }) { const s = useSavedNews(); const on = s.has(a.eventId);
+  return <button className="btn" onClick={() => s.toggle(evNews(a))} aria-pressed={on}>{on ? <BookmarkCheck size={13} className="text-info" /> : <Bookmark size={13} />}{on ? "Saved" : "Save news"}</button>; }
+export function SaveEventBtns({ ev }: { ev: EventGroup & { analysis: any } }) {
+  const n = useSavedNews(); const an = useSavedAnalyses(); const a = ev.articles[0]; const onN = n.has(ev.id); const onA = an.has(ev.id);
+  return (<>
+    {a && <button className="btn" onClick={() => n.toggle({ ...evNews(a), eventId: ev.id, title: ev.title })} aria-pressed={onN}>{onN ? <BookmarkCheck size={13} className="text-info" /> : <Bookmark size={13} />}{onN ? "Saved" : "Save news"}</button>}
+    <button className="btn" onClick={() => an.toggle({ eventId: ev.id, title: ev.title, analysis: { impactScore: ev.impactScore, category: ev.category, importance: ev.importance, status: ev.status, impacts: ev.analysis.impacts?.slice(0, 8), sections: ev.analysis.sections } })} aria-pressed={onA}><Sparkles size={13} className={onA ? "text-info" : ""} />{onA ? "Analysis saved" : "Save analysis"}</button>
+  </>);
 }

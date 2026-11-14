@@ -9,6 +9,7 @@ import { useAlertLog } from "@/lib/userdata";
 import GlobalSearch from "./GlobalSearch";
 import AlertRunner from "./AlertRunner";
 import { PanelProvider } from "./Panel";
+import { useAuth } from "./AuthProvider";
 
 type Item = { href: string; label: string };
 const TOP: ({ label: string; href: string } | { label: string; items: Item[] })[] = [
@@ -20,6 +21,27 @@ const TOP: ({ label: string; href: string } | { label: string; items: Item[] })[
   { label: "Global Events", href: "/events" },
   { label: "More", items: [{ href: "/history", label: "Historical Comparisons" }, { href: "/watchlist", label: "Watchlist" }, { href: "/alerts", label: "Alerts" }, { href: "/settings", label: "Settings" }] },
 ];
+
+function ProfileMenu() {
+  const { configured, user, profile, signOut } = useAuth(); const [open, setOpen] = useState(false); const ref = useRef<HTMLDivElement>(null); const path = usePathname();
+  useEffect(() => { const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  useEffect(() => setOpen(false), [path]);
+  const name = profile?.display_name || user?.email?.split("@")[0] || "Guest"; const initial = name.charAt(0).toUpperCase();
+  const items = [{ href: "/profile", label: "My Profile", icon: I.User }, { href: "/settings", label: "Account Settings", icon: I.Settings }, { href: "/watchlist", label: "My Watchlist", icon: I.Star }, { href: "/portfolio", label: "My Portfolio", icon: I.Wallet }];
+  return (<div ref={ref} className="relative">
+    <button onClick={() => setOpen(!open)} aria-label="Profile menu" aria-expanded={open} className="grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-violet to-pink text-sm font-bold text-white shadow-[0_6px_18px_-6px_rgba(236,72,153,.8)]">
+      {profile?.avatar_url ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" /> : user ? initial : <I.User size={16} />}</button>
+    {open && <div className="pop absolute right-0 top-full z-50 mt-2 w-60 rounded-2xl border border-info/40 bg-panel p-1.5 shadow-[0_20px_50px_-15px_rgba(139,92,246,.55)]">
+      <div className="px-3 py-2"><div className="truncate text-sm font-semibold">{configured && user ? name : "Local mode"}</div><div className="truncate text-[11px] text-mute">{configured && user ? user.email : "Data is stored in this browser only"}</div></div>
+      <div className="my-1 h-px bg-line" />
+      {items.map(i => <Link key={i.href} href={i.href} className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-mute hover:bg-panel2 hover:text-fg"><i.icon size={15} />{i.label}</Link>)}
+      <div className="my-1 h-px bg-line" />
+      {configured && user ? <button onClick={signOut} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-down hover:bg-panel2"><I.LogOut size={15} />Sign Out</button>
+        : configured ? <Link href="/login" className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-info hover:bg-panel2"><I.LogIn size={15} />Sign in</Link>
+        : <div className="px-3 py-2 text-[11px] text-mute">Set up Supabase to enable accounts (see README).</div>}
+    </div>}
+  </div>);
+}
 
 function Dropdown({ label, items, path }: { label: string; items: Item[]; path: string }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLDivElement>(null);
@@ -61,7 +83,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <Link href="/alerts" className="btn relative !px-2.5" aria-label="Alerts"><I.Bell size={15} />{log.length > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-pink ring-2 ring-bg" />}</Link>
               <button className="btn !px-2.5" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">{theme === "dark" ? <I.Sun size={15} /> : <I.Moon size={15} />}</button>
               <Link href="/settings" className="btn hidden sm:inline-flex !px-2.5" aria-label="Settings"><I.Settings size={15} /></Link>
-              <Link href="/settings" aria-label="Profile" className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-violet to-pink text-white shadow-[0_6px_18px_-6px_rgba(236,72,153,.8)]"><I.User size={16} /></Link>
+              <ProfileMenu />
             </div>
             <div className="md:hidden w-full"><GlobalSearch /></div>
           </header>

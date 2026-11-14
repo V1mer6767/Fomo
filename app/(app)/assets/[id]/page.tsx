@@ -1,7 +1,7 @@
 "use client";
 import { use, useState } from "react";
 import Link from "next/link";
-import { Banner, Change, ImpactCard, Loading, NewsCard, PriceChart, StarBtn } from "@/components/ui";
+import { Banner, Change, ImpactCard, Loading, NewsCard, PriceChart, StarBtn, FavBtn } from "@/components/ui";
 import { fmtBig, fmtPrice, ago, useApi, useCalendar, useNews, useQuotes } from "@/lib/hooks";
 import Candles from "@/components/Candles";
 import { asset as getAsset } from "@/lib/assets";
@@ -17,7 +17,7 @@ export default function AssetPage({ params }: { params: Promise<{ id: string }> 
     <Link href="/assets" className="text-xs text-info">← Assets</Link>
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold">{def.symbol} <span className="text-base font-normal text-mute">{def.name}</span></h1>
       {q ? <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1"><span className="text-3xl num font-semibold">{fmtPrice(q.price)}</span><span>24h <Change v={q.change24h} /></span><span>7d <Change v={q.change7d} /></span>{q.volume != null && <span className="text-sm text-mute">Vol {fmtBig(q.volume)}</span>}{q.marketCap != null && <span className="text-sm text-mute">Mkt cap {fmtBig(q.marketCap)}</span>}</div> : loading ? <Loading n={1} /> : <p className="text-sm text-mute mt-1">No live quote available for this asset right now.</p>}
-      {q && <div className="text-[11px] text-mute mt-1">{q.source} · as of {ago(q.asOf)}{q.delayed ? " · delayed" : ""}</div>}</div><StarBtn id={id} /></div>
+      {q && <div className="text-[11px] text-mute mt-1">{q.source} · as of {ago(q.asOf)}{q.delayed ? " · delayed" : ""}</div>}</div><div className="flex gap-2"><StarBtn id={id} /><FavBtn id={id} /></div></div>
     <Banner demo={env?.demo} errors={env?.errors} />
     <section className="card p-4"><div className="flex flex-wrap gap-2 mb-2"><div className="flex gap-1 mr-3">{(["candles", "line"] as const).map(m => <button key={m} className={`btn ${mode === m ? "!border-info text-info" : ""}`} onClick={() => setMode(m)}>{m === "candles" ? "Candles" : "Line"}</button>)}</div><div className="flex gap-1 mr-3">{["1m", "5m", "15m", "30m", "1h", "4h", "1d"].map(t => <button key={t} className={`btn !px-2.5 ${tf === t ? "!border-info text-info" : ""}`} onClick={() => setTf(t)}>{t === "1d" ? "1D" : t.toUpperCase().replace("M", "m")}</button>)}</div>{tf === "1d" && [30, 90, 365].map(d => <button key={d} className={`btn ${days === d ? "!border-info text-info" : ""}`} onClick={() => setDays(d)}>{d === 365 ? "1Y" : d + "D"}</button>)}</div>
       {hist.loading ? <Loading n={2} /> : hist.error ? <p className="text-sm text-mute">Chart unavailable: {hist.error}{tf !== "1d" ? " — intraday data can be missing when the market is closed or the provider limits requests." : ""}</p> : mode === "candles" ? <Candles data={hist.env?.data ?? []} intraday={tf !== "1d"} /> : <PriceChart data={hist.env?.data ?? []} intraday={tf !== "1d"} />}</section>
