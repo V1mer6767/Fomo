@@ -9,7 +9,7 @@ export default function Portfolio() {
   const [p, setP] = usePortfolio(); const { byId, env } = useQuotes(); const [id, setId] = useState("BTC"); const [amt, setAmt] = useState(""); const [err, setErr] = useState("");
   const px = (a: string) => byId[a]?.price ?? null;
   const equity = p.cash + p.positions.reduce((s, x) => s + x.qty * (px(x.asset) ?? x.avg), 0);
-  useEffect(() => { if (!env || env.demo) return; const last = p.equity.at(-1); if (!last || Date.now() - last.t > 5 * 60_000) setP({ ...p, equity: [...p.equity, { t: Date.now(), v: equity }].slice(-500) }); }, [env]); // eslint-disable-line
+  useEffect(() => { if (!env || env.demo) return; setP(cur => { const last = cur.equity.at(-1); if (last && Date.now() - last.t <= 5 * 60_000) return cur; const eq = cur.cash + cur.positions.reduce((s, x) => s + x.qty * (px(x.asset) ?? x.avg), 0); return { ...cur, equity: [...cur.equity, { t: Date.now(), v: eq }].slice(-500) }; }); }, [env]); // eslint-disable-line
   const trade = (side: "buy" | "sell") => {
     setErr(""); const price = px(id); const usdAmt = +amt;
     if (env?.demo) return setErr("Trading is disabled while demo data is shown."); if (price == null) return setErr("No live price for this asset."); if (!(usdAmt > 0)) return setErr("Enter an amount in USD.");

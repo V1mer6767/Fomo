@@ -42,7 +42,7 @@ export function createCloudStore(adapter: CloudAdapter, onError?: (e: Error) => 
 let store: Store = localStore;
 export function setStore(s: Store) { store = s; if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("fomo-store-reset")); }
 
-export function useSetting<T>(key: string, def: T): [T, (v: T) => void] {
+export function useSetting<T>(key: string, def: T): [T, (v: T | ((prev: T) => T)) => void] {
   const [v, setV] = useState<T>(def);
   useEffect(() => {
     const read = () => setV(store.get(key, def));
@@ -52,6 +52,7 @@ export function useSetting<T>(key: string, def: T): [T, (v: T) => void] {
     return () => { window.removeEventListener("fomo-store", h); window.removeEventListener("fomo-store-reset", read); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
-  const set = useCallback((n: T) => { setV(n); store.set(key, n); }, [key]);
+  const set = useCallback((n: T | ((prev: T) => T)) => { const next = typeof n === "function" ? (n as (p: T) => T)(store.get(key, def)) : n; setV(next); store.set(key, next); }, [key]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return [v, set];
 }
