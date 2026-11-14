@@ -30,7 +30,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     if (activeUid.current === u.id) return;
     teardown(); activeUid.current = u.id;
     const sb = supabaseBrowser();
-    const store = createCloudStore(createAdapter(sb, u.id), e => setSyncError(e ? "Couldn't sync some changes — retrying." : null));
+    const store = createCloudStore(createAdapter(sb, u.id), e => setSyncError(e ? `Sync failed: ${e.message}` : null));
     cloud.current = store;
     const [p] = await Promise.all([
       sb.from("profiles").select("display_name,avatar_url,created_at").eq("id", u.id).maybeSingle(),

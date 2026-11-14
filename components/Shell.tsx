@@ -43,6 +43,11 @@ function ProfileMenu() {
   </div>);
 }
 
+function SyncBanner() {
+  const { syncError } = useAuth(); if (!syncError) return null;
+  return <div role="alert" className="fixed bottom-3 left-1/2 z-[80] max-w-[92vw] -translate-x-1/2 rounded-xl border border-down/60 bg-panel px-4 py-2 text-xs text-down shadow-lg">{syncError}</div>;
+}
+
 function Dropdown({ label, items, path }: { label: string; items: Item[]; path: string }) {
   const [open, setOpen] = useState(false); const ref = useRef<HTMLDivElement>(null);
   const active = items.some(i => path.startsWith(i.href));
@@ -97,6 +102,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <footer className="relative z-10 px-6 pb-5 text-[11px] text-mute">Informational only — not investment advice. No trades are executed. Impact analyses are rule-based scenarios, not predictions. Data may be delayed.</footer>
         </div>
       </div>
+      <SyncBanner />
       <AlertRunner />
     </PanelProvider>
   );
