@@ -68,7 +68,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   return (
     <PanelProvider>
       <div className="p-2 sm:p-4 lg:p-5">
-        <div className="app-frame mx-auto max-w-[1500px]">
+        <div className="app-frame mx-auto w-full max-w-[1500px] min-[1800px]:max-w-[2000px] min-[2300px]:max-w-[2600px]">
           <header className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-4 sm:px-6 sm:pt-5">
             <button className="lg:hidden btn !px-2.5" onClick={() => setDrawer(true)} aria-label="Menu"><I.Menu size={16} /></button>
             <Link href="/" className="flex items-center gap-2.5 mr-1">

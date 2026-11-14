@@ -57,3 +57,8 @@ body{font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
 .pop{animation:pop .15s ease both}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgb(var(--line));border-radius:8px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Scale the whole UI up on large monitors so the layout fills the screen instead of leaving empty margins. */
+@media (min-width:1800px){html{font-size:17px}}
+@media (min-width:2300px){html{font-size:19px}}
+@media (min-width:3000px){html{font-size:22px}}
