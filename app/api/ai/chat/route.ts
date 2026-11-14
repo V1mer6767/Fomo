@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   const used = r.sources.filter(s => answer.includes(`[S${s.n}]`));
   const sources = used.length ? used : r.sources.slice(0, 6);
   await sb.from("ai_messages").insert([
-    { conversation_id: convId, user_id: user.id, role: "user", content: message },
+    { conversation_id: convId, user_id: user.id, role: "user", content: message, created_at: new Date(Date.now() - 1000).toISOString() },
     { conversation_id: convId, user_id: user.id, role: "assistant", content: answer.slice(0, 19000), sources, meta: { mode, model, asOf: r.asOf, demo: r.demo, usage } },
   ]);
   await sb.from("ai_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);

@@ -22,7 +22,11 @@ export default function Analyst() {
   if (!configured || !user) return <NeedAccount title="AI Market Analyst" />;
   const open = async (id: string) => {
     setCid(id); setErr(null);
-    const { data } = await supabaseBrowser().from("ai_messages").select("id,role,content,sources,meta").eq("conversation_id", id).order("created_at"); setMsgs((data ?? []) as M[]);
+    setMsgs([]); setBusy(true);
+    const { data, error } = await supabaseBrowser().from("ai_messages").select("id,role,content,sources,meta").eq("conversation_id", id).order("created_at", { ascending: true }).order("role", { ascending: false });
+    setBusy(false);
+    if (error) { setErr(`Couldn't open this chat: ${error.message}`); return; }
+    setMsgs(((data ?? []) as M[]).map(m => ({ ...m, sources: Array.isArray(m.sources) ? m.sources : [], meta: m.meta ?? {} })));
   };
   const remove = async (id: string) => { await supabaseBrowser().from("ai_conversations").delete().eq("id", id); if (cid === id) { setCid(null); setMsgs([]); } loadConvs(); };
   const send = async (q?: string) => {
@@ -49,7 +53,7 @@ export default function Analyst() {
               <ul className="space-y-1 text-[11px] text-mute">{m.sources.map(s => <li key={s.n}><b className="text-info">S{s.n}</b> <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-fg hover:underline">{s.title}</a> — {s.source}, {ago(s.publishedAt)}{s.status && s.status !== "confirmed" ? <span className="text-warn"> · {s.status}</span> : null}</li>)}</ul></div>}
             <div className="mt-2 text-[10px] text-mute">{m.meta?.mode === "claude" ? `AI: ${m.meta.model}` : "Rule-based summary (AI not configured)"}{m.meta?.asOf ? ` · data as of ${new Date(m.meta.asOf).toLocaleString()}` : ""}{m.meta?.demo ? " · includes DEMO data" : ""}</div>
           </div>)}
-        {busy && <div className="flex items-center gap-2 text-sm text-mute"><Loader2 size={14} className="animate-spin" />Searching news and market data, then analysing…</div>}
+        {busy && <div className="flex items-center gap-2 text-sm text-mute"><Loader2 size={14} className="animate-spin" />{msgs.length && msgs[msgs.length - 1].role === "user" ? "Searching news and market data, then analysing…" : "Loading…"}</div>}
         <div ref={end} />
       </div>
       {err && <div role="alert" className="mt-2 rounded-xl border border-down/50 bg-down/10 px-3 py-2 text-sm text-down">{err}</div>}
