@@ -43,11 +43,48 @@ export function Donut({ data, size = 150, center }: { data: { name: string; valu
       {center && <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">{center}</div>}</div>
     <ul className="min-w-[140px] flex-1 space-y-1.5 text-sm">{data.map((d, i) => <li key={d.name} className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full" style={{ background: PALETTE[i % PALETTE.length] }} /><span className="flex-1 truncate">{d.name}</span><span className="num text-mute">{total ? ((d.value / total) * 100).toFixed(1) : "0.0"}%</span></li>)}</ul></div>);
 }
-const GLYPH: Record<string, string> = { BTC: "₿", ETH: "Ξ", SOL: "◎", XRP: "✕", BNB: "B", ADA: "₳", DOGE: "Ð", EURUSD: "€", GBPUSD: "£", USDJPY: "¥", USDCHF: "₣", AUDUSD: "A$", USDCAD: "C$", NZDUSD: "N$", XAU: "Au", WTI: "Oil", SPX: "500", NDX: "100", DJI: "30", DAX: "40", DXY: "$" };
-const GRAD: Record<string, string> = { crypto: "from-info to-pink", forex: "from-cyan to-info", commodity: "from-warn to-pink", index: "from-info to-cyan", rates: "from-info to-violet" };
+/* ---------- Asset logos: official crypto logos (cryptocurrency-icons / Simple Icons, CC0), country flags (flag-icons, MIT), vector commodity icons ---------- */
+const CRYPTO_LOGOS = new Set(["btc", "eth", "sol", "xrp", "bnb", "ada", "doge", "ton"]);
+const FLAG: Record<string, string> = { EUR: "eu", USD: "us", GBP: "gb", JPY: "jp", CHF: "ch", AUD: "au", CAD: "ca", NZD: "nz" };
+const INDEX_FLAG: Record<string, string> = { SPX: "us", NDX: "us", DJI: "us", DAX: "de", DXY: "us" };
+function Flag({ code, size, ring }: { code: string; size: number; ring?: boolean }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={`/logos/flags/${code}.svg`} alt="" width={size} height={size} draggable={false} className="shrink-0 rounded-full object-cover" style={{ width: size, height: size, boxShadow: ring ? "0 0 0 2px rgb(var(--bg))" : "0 0 0 1px rgba(255,255,255,.12)" }} />;
+}
+function CryptoLogo({ id, size }: { id: string; size: number }) {
+  const [bad, setBad] = useState(false); const k = id.toLowerCase();
+  if (bad || !CRYPTO_LOGOS.has(k)) return <span className="grid shrink-0 place-items-center rounded-full bg-panel2 font-bold text-mute" style={{ width: size, height: size, fontSize: size * 0.32 }}>{id.slice(0, 3)}</span>;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={`/logos/crypto/${k}.svg`} alt={id} width={size} height={size} draggable={false} onError={() => setBad(true)} className="shrink-0" style={{ width: size, height: size }} />;
+}
+const Bar = ({ x, y, w, h, g }: { x: number; y: number; w: number; h: number; g: string }) => (<g><path d={`M${x + 3} ${y} H${x + w - 3} L${x + w} ${y + h} H${x} Z`} fill={`url(#${g})`} stroke="rgba(0,0,0,.35)" strokeWidth=".8" strokeLinejoin="round" /><path d={`M${x + 5} ${y + 2.2} H${x + w - 5}`} stroke="rgba(255,255,255,.55)" strokeWidth="1.2" strokeLinecap="round" /></g>);
+function Ingots({ kind, size }: { kind: "gold" | "silver"; size: number }) {
+  const g = kind === "gold" ? "gGold" : "gSilver"; const [c1, c2] = kind === "gold" ? ["#FFE27A", "#C58A12"] : ["#F4F6F9", "#8E98A6"];
+  return <svg width={size} height={size} viewBox="2 10 44 36" className="shrink-0" aria-label={kind === "gold" ? "Gold" : "Silver"}><defs><linearGradient id={g} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={c1} /><stop offset="1" stopColor={c2} /></linearGradient></defs>
+    <Bar x={4} y={29} w={21} h={11} g={g} /><Bar x={23} y={29} w={21} h={11} g={g} /><Bar x={13.5} y={16} w={21} h={11} g={g} /></svg>;
+}
+function Barrel({ size }: { size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 48 48" className="shrink-0" aria-label="Oil"><defs><linearGradient id="gOil" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#8A4B0F" /><stop offset=".45" stopColor="#F2A33A" /><stop offset="1" stopColor="#8A4B0F" /></linearGradient></defs>
+    <path d="M13 6h22c2.5 0 4 1.5 4 4v28c0 2.5-1.5 4-4 4H13c-2.5 0-4-1.5-4-4V10c0-2.5 1.5-4 4-4z" fill="url(#gOil)" stroke="rgba(0,0,0,.4)" strokeWidth=".8" />
+    <path d="M9 14h30M9 24h30M9 34h30" stroke="#2A1A07" strokeWidth="2.2" opacity=".75" /><path d="M24 17.5c2.2 2.6 3.4 4.2 3.4 6a3.4 3.4 0 0 1-6.8 0c0-1.8 1.2-3.4 3.4-6z" fill="#1B1206" opacity=".85" /></svg>;
+}
+function Flame({ size }: { size: number }) {
+  return <svg width={size} height={size} viewBox="0 0 48 48" className="shrink-0" aria-label="Natural gas"><defs><linearGradient id="gFl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7DD3FC" /><stop offset="1" stopColor="#2563EB" /></linearGradient></defs>
+    <path d="M24 4c1.5 7 11.5 11 11.5 24a11.5 11.5 0 0 1-23 0c0-6 3.8-8.6 5.8-14.5 1.6 3.4 3.4 3.6 4.5 1.8C23.6 12.4 24 8.4 24 4z" fill="url(#gFl)" />
+    <path d="M24 24c.8 3.5 5.5 5.4 5.5 10.2a5.5 5.5 0 0 1-11 0c0-3 1.8-4.2 3-7 .8 1.7 1.7 1.8 2.5.9.3-1.1 0-2.6 0-4.1z" fill="#E0F2FE" opacity=".92" /></svg>;
+}
+/** Authentic asset logo: crypto brand logos, flag pairs for forex, vector icons for commodities. */
 export function AssetIcon({ id, size = 36 }: { id: string; size?: number }) {
-  const cls = asset(id)?.cls ?? "index"; const g = GLYPH[id] ?? id.slice(0, 2);
-  return <span className={`grid shrink-0 place-items-center rounded-full bg-gradient-to-br font-bold text-white shadow-[0_6px_16px_-6px_rgba(139,92,246,.8)] ${GRAD[cls]}`} style={{ width: size, height: size, fontSize: g.length > 2 ? size * 0.26 : size * 0.42 }}>{g}</span>;
+  const def = asset(id);
+  if (def?.cls === "crypto") return <CryptoLogo id={id} size={size} />;
+  if (def?.pair) { const f = def.pair.map(c => FLAG[c]); const fs = Math.round(size * 0.76);
+    return <span className="relative inline-block shrink-0" style={{ width: Math.round(size * 1.38), height: size }} aria-label={def.symbol}><span className="absolute left-0" style={{ top: (size - fs) / 2 }}><Flag code={f[0]} size={fs} ring /></span><span className="absolute right-0" style={{ top: (size - fs) / 2 }}><Flag code={f[1]} size={fs} ring /></span></span>; }
+  if (id === "XAU") return <Ingots kind="gold" size={size} />;
+  if (id === "XAG") return <Ingots kind="silver" size={size} />;
+  if (id === "WTI") return <Barrel size={size} />;
+  if (id === "NG") return <Flame size={size} />;
+  if (INDEX_FLAG[id]) return <Flag code={INDEX_FLAG[id]} size={size} />;
+  return <span className="grid shrink-0 place-items-center rounded-full bg-panel2 font-bold text-mute" style={{ width: size, height: size, fontSize: size * 0.32 }}>{id.slice(0, 3)}</span>;
 }
 /** Market overview card: icon, name, price, 24h change, interactive sparkline. */
 export function AssetCard({ q, label }: { q: Quote; label?: string }) {
