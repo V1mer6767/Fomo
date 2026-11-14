@@ -26,6 +26,7 @@ export default function Analyst() {
     const { data, error } = await supabaseBrowser().from("ai_messages").select("id,role,content,sources,meta").eq("conversation_id", id).order("created_at", { ascending: true }).order("role", { ascending: false });
     setBusy(false);
     if (error) { setErr(`Couldn't open this chat: ${error.message}`); return; }
+    if (!data?.length) { setErr("This chat has no saved messages (they were not stored or are not readable)."); return; }
     setMsgs(((data ?? []) as M[]).map(m => ({ ...m, sources: Array.isArray(m.sources) ? m.sources : [], meta: m.meta ?? {} })));
   };
   const remove = async (id: string) => { await supabaseBrowser().from("ai_conversations").delete().eq("id", id); if (cid === id) { setCid(null); setMsgs([]); } loadConvs(); };
@@ -35,6 +36,7 @@ export default function Analyst() {
       const r = await fetch("/api/ai/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, conversationId: cid }) });
       const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error ?? "Request failed");
       setMsgs(m => [...m, { role: "assistant", content: j.answer, sources: j.sources, meta: j.meta }]); if (!cid) { setCid(j.conversationId); loadConvs(); }
+      if (j.saveError) setErr(`The answer was NOT saved to history: ${j.saveError}`);
     } catch (e: any) { setErr(e.message); } finally { setBusy(false); }
   };
   return (<div className="grid gap-4 lg:grid-cols-[240px_1fr]">
