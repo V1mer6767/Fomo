@@ -148,6 +148,9 @@ create policy "portfolio_history: own portfolio" on public.portfolio_history as 
 
 -- Anonymous (not logged in) role gets nothing.
 revoke all on all tables in schema public from anon;
+-- Works whether or not "Automatically expose new tables" was ticked: signed-in users get access, RLS still limits rows to their own.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
 
 -- ---------- New user bootstrap: profile, preferences, portfolio, default watchlist ----------
 create or replace function public.handle_new_user() returns trigger
