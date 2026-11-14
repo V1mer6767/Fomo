@@ -55,6 +55,22 @@ Per-user data: profile (name/avatar), crypto/forex watchlist, favorites, saved n
 
 Security: passwords are handled and hashed by Supabase Auth; the browser only holds the public anon key; routes are protected by middleware and RLS (`user_id = auth.uid()`); redirects are validated; account deletion runs server-side after re-authentication and a typed `DELETE` confirmation.
 
+## AI Analyst & autonomous news monitor
+
+Needs accounts (above). Pieces: **AI Analyst** (`/analyst`), **Monitored Events** (`/monitor`), **Notifications** (bell), **Daily Briefing** (`/briefing`), preferences in Settings → News monitoring.
+
+Setup:
+1. Supabase → SQL Editor → run `supabase/ai_schema.sql` (after `schema.sql`; do not re-run `schema.sql` afterwards).
+2. Vercel env vars (then redeploy):
+   - `CRON_SECRET` — any random string ≥ 16 chars (protects the cron endpoints).
+   - `ANTHROPIC_API_KEY` — from console.anthropic.com (server only). Without it the analyst and monitor still work in **rule-based mode** and say so.
+   - Optional: `FRED_API_KEY` (US macro data), `ANTHROPIC_CHAT_MODEL`, `ANTHROPIC_FAST_MODEL`, `AI_DAILY_LIMIT` (questions/user/day, default 30), `AI_MAX_ANALYSES_PER_RUN` (default 4), `AI_MAX_ANALYSES_PER_DAY` (default 60).
+3. Scheduler. Vercel Hobby cron runs at most once a day (`vercel.json` already has a daily fallback). For every-20-minute monitoring use the included GitHub Action `.github/workflows/monitor.yml`: repo → Settings → Secrets and variables → Actions → add `SITE_URL` (e.g. `https://your-app.vercel.app`) and `CRON_SECRET` (same value as in Vercel). Run it once via Actions → News monitor → Run workflow.
+
+How it works: cron → `/api/cron/ingest` collects RSS/GDELT news → normalises, de-duplicates and groups articles into events → matches them to events already stored (no duplicates/alerts) → scores importance (critical/high/medium/low from source reliability, significance, affected assets, geography, confirmation, freshness — *not* predicted volatility) → maps related assets → Claude analyses only high/critical events (capped per run/day) → stores everything in Supabase → creates one in-app notification per matching user per event. `/api/cron/briefing` writes each user's daily briefing.
+
+Reliability: retrieved articles are treated as untrusted data (prompt-injection safe); sources, links and timestamps are always shown; unconfirmed reports are labelled; impacts are "potential", never predictions; no trades are executed. Costs: with Haiku-class analysis of ≤4 events per run and Sonnet for chat, expect low single-digit USD/month for light use; the limits above cap it.
+
 ## Known limitations
 - Developed in a sandbox with no outbound access to the data providers: parsers and pipeline are unit-tested and the UI was exercised with mocked responses, but **live-provider behaviour should be verified after the first deploy** (some providers change endpoints or block cloud IPs).
 - Rule-based analysis is keyword-driven and can miss context; it never reads full articles.

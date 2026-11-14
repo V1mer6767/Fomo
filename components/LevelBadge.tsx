@@ -1,0 +1,2 @@
+const LEVEL_STYLE: Record<string, string> = { critical: "border-down/60 bg-down/15 text-down", high: "border-warn/60 bg-warn/15 text-warn", medium: "border-info/60 bg-info/15 text-info", low: "border-line text-mute" };
+export const LevelBadge = ({ v }: { v: string }) => <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${LEVEL_STYLE[v] ?? LEVEL_STYLE.low}`}>{v}</span>;

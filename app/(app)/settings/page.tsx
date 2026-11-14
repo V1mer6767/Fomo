@@ -11,6 +11,7 @@ import { ASSETS } from "@/lib/assets";
 import { usePrefs } from "@/lib/userdata";
 import { validateConfirm, validatePassword } from "@/lib/validate";
 import { Field } from "@/components/AuthForm";
+import MonitoringSettings from "@/components/MonitoringSettings";
 
 export default function Settings() {
   const { configured, user, signOut, syncError } = useAuth(); const router = useRouter();
@@ -36,6 +37,7 @@ export default function Settings() {
     {account && <section className="card p-4 text-sm"><div className="font-semibold mb-1">Account</div><div className="text-mute">{user!.email}</div><div className="mt-2 flex gap-2"><Link href="/profile" className="btn">Edit profile</Link><button className="btn" onClick={signOut}>Sign out</button></div>
       {syncError && <div className="mt-2 text-xs text-warn">{syncError}</div>}</section>}
     <section className="card p-4"><div className="font-semibold mb-2">Appearance</div><div className="flex gap-2">{(["dark", "light"] as const).map(t => <button key={t} className={`btn ${theme === t ? "!border-info text-info" : ""}`} onClick={() => setTheme(t)}>{t}</button>)}</div></section>
+    {account && <MonitoringSettings />}
     <section className="card p-4 text-sm"><div className="font-semibold mb-2">Dashboard preferences</div><div className="grid gap-3 sm:grid-cols-2">
       <label className="text-xs text-mute">Default chart asset<select className="inp mt-1 w-full" value={prefs.defaultAsset} onChange={e => setPrefs({ ...prefs, defaultAsset: e.target.value })}>{ASSETS.map(a => <option key={a.id} value={a.id}>{a.symbol} — {a.name}</option>)}</select></label>
       <label className="text-xs text-mute">News sorting<select className="inp mt-1 w-full" value={prefs.newsSort} onChange={e => setPrefs({ ...prefs, newsSort: e.target.value as "new" | "impact" })}><option value="new">Newest first</option><option value="impact">Highest impact first</option></select></label></div></section>

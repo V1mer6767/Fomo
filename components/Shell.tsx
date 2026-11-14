@@ -10,6 +10,7 @@ import GlobalSearch from "./GlobalSearch";
 import AlertRunner from "./AlertRunner";
 import { PanelProvider } from "./Panel";
 import { useAuth } from "./AuthProvider";
+import { supabaseBrowser } from "@/lib/supabase/client";
 
 type Item = { href: string; label: string };
 const TOP: ({ label: string; href: string } | { label: string; items: Item[] })[] = [
@@ -17,9 +18,10 @@ const TOP: ({ label: string; href: string } | { label: string; items: Item[] })[
   { label: "Live News", href: "/news" },
   { label: "Markets", items: [{ href: "/assets", label: "Asset Intelligence" }, { href: "/crypto", label: "Cryptocurrency" }, { href: "/forex", label: "Forex" }] },
   { label: "AI Intelligence", href: "/intelligence" },
+  { label: "AI Analyst", href: "/analyst" },
   { label: "Portfolio", href: "/portfolio" },
   { label: "Global Events", href: "/events" },
-  { label: "More", items: [{ href: "/history", label: "Historical Comparisons" }, { href: "/watchlist", label: "Watchlist" }, { href: "/alerts", label: "Alerts" }, { href: "/settings", label: "Settings" }] },
+  { label: "More", items: [{ href: "/history", label: "Historical Comparisons" }, { href: "/monitor", label: "Monitored Events" }, { href: "/briefing", label: "Daily Briefing" }, { href: "/notifications", label: "Notifications" }, { href: "/watchlist", label: "Watchlist" }, { href: "/alerts", label: "Alerts" }, { href: "/settings", label: "Settings" }] },
 ];
 
 function ProfileMenu() {
@@ -61,10 +63,23 @@ function Dropdown({ label, items, path }: { label: string; items: Item[]; path: 
 }
 const pill = (a: boolean) => `inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition ${a ? "text-white bg-gradient-to-r from-info to-violet shadow-[0_6px_22px_-6px_rgba(139,92,246,.9)]" : "text-mute hover:text-fg hover:bg-panel2/70"}`;
 
+/** Unread personal notifications (polled; refreshed when the notifications page changes them). */
+function useUnread() {
+  const { configured, user } = useAuth(); const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!configured || !user) { setN(0); return; }
+    let alive = true;
+    const load = async () => { try { const { count } = await supabaseBrowser().from("user_notifications").select("id", { count: "exact", head: true }).is("read_at", null); if (alive) setN(count ?? 0); } catch {} };
+    load(); const t = setInterval(load, 60_000); window.addEventListener("notif-refresh", load);
+    return () => { alive = false; clearInterval(t); window.removeEventListener("notif-refresh", load); };
+  }, [configured, user]);
+  return n;
+}
+
 export default function Shell({ children }: { children: React.ReactNode }) {
-  const path = usePathname();
+  const { configured } = useAuth(); const path = usePathname();
   const [theme, setTheme] = useSetting<"dark" | "light">("theme", "dark");
-  const [log] = useAlertLog();
+  const [log] = useAlertLog(); const unread = useUnread();
   const [drawer, setDrawer] = useState(false);
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
   useEffect(() => setDrawer(false), [path]);
@@ -85,7 +100,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             </nav>
             <div className="ml-auto flex items-center gap-2">
               <div className="hidden md:block w-64 xl:w-80"><GlobalSearch /></div>
-              <Link href="/alerts" className="btn relative !px-2.5" aria-label="Alerts"><I.Bell size={15} />{log.length > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-pink ring-2 ring-bg" />}</Link>
+              <Link href={configured ? "/notifications" : "/alerts"} className="btn relative !px-2.5" aria-label="Notifications"><I.Bell size={15} />{(unread > 0 || (!configured && log.length > 0)) && <span className="absolute -right-1 -top-1 grid min-w-[16px] place-items-center rounded-full bg-pink px-1 text-[9px] font-bold leading-4 text-white ring-2 ring-bg">{unread > 0 ? (unread > 9 ? "9+" : unread) : ""}</span>}</Link>
               <button className="btn !px-2.5" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">{theme === "dark" ? <I.Sun size={15} /> : <I.Moon size={15} />}</button>
               <Link href="/settings" className="btn hidden sm:inline-flex !px-2.5" aria-label="Settings"><I.Settings size={15} /></Link>
               <ProfileMenu />

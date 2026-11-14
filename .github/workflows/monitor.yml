@@ -1,0 +1,23 @@
+# Runs the news monitor independently of any open browser. Needs two repository secrets:
+#   SITE_URL     e.g. https://your-app.vercel.app   (no trailing slash)
+#   CRON_SECRET  same value as the CRON_SECRET env var in Vercel
+name: News monitor
+on:
+  schedule:
+    - cron: "*/20 * * * *"     # collect + analyse + notify
+    - cron: "5 5 * * *"        # daily briefing (05:05 UTC)
+  workflow_dispatch: {}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call monitor endpoint
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          set -euo pipefail
+          path="/api/cron/ingest"; [ "$SCHEDULE" = "5 5 * * *" ] && path="/api/cron/briefing"
+          code=$(curl -sS -o out.json -w "%{http_code}" --max-time 100 -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL$path")
+          cat out.json; echo; [ "$code" = "200" ]
