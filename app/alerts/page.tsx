@@ -13,7 +13,7 @@ export default function Alerts() {
   const add = () => { if (needsVal && !(+value > 0)) return; if (kind === "news-keyword" && !kw.trim()) return;
     setRules([...rules, { id: String(Date.now()), kind, asset: needsAsset || (kind === "high-importance" && asset !== "ANY") ? asset : undefined, value: needsVal ? +value : undefined, keyword: kind === "news-keyword" ? kw.trim() : undefined, enabled: true }]); setValue(""); setKw(""); };
   const perm = typeof Notification !== "undefined" ? Notification.permission : "unsupported";
-  return (<div className="space-y-5"><h1 className="text-xl font-bold">Alerts</h1>
+  return (<div className="space-y-5"><h1 className="text-2xl font-bold tracking-tight">Alerts</h1>
     <section className="card p-4 flex flex-wrap gap-2 items-end">
       <select className="inp" value={kind} onChange={e => setKind(e.target.value as any)}>{KINDS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
       {(needsAsset || kind === "high-importance") && <select className="inp" value={asset} onChange={e => setAsset(e.target.value)}>{kind === "high-importance" && <option value="ANY">Any asset</option>}{ASSETS.map(a => <option key={a.id} value={a.id}>{a.symbol}</option>)}</select>}

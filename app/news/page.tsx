@@ -16,7 +16,7 @@ function Inner() {
   const shown = useMemo(() => sort === "impact" ? [...list].sort((a, b) => b.impactScore - a.impactScore || +new Date(b.publishedAt) - +new Date(a.publishedAt)) : list, [list, sort]);
   const Sel = ({ v, set, ph, opts }: { v: string; set: (s: string) => void; ph: string; opts: [string, string][] }) => <select className="inp" value={v} onChange={e => set(e.target.value)}><option value="">{ph}</option>{opts.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>;
   return (<div className="space-y-4">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-xl font-bold">Live News</h1><Live at={n.env?.fetchedAt} demo={n.env?.demo} /></div>
+    <div className="flex flex-wrap items-center justify-between gap-2"><h1 className="text-2xl font-bold tracking-tight">Live News</h1><Live at={n.env?.fetchedAt} demo={n.env?.demo} /></div>
     <Banner demo={n.env?.demo} errors={n.env?.errors} stale={n.env?.stale} source={n.env?.source} at={n.env?.fetchedAt} />
     <div className="flex flex-wrap gap-2">
       <input className="inp" placeholder="Filter text…" value={q} onChange={e => setQ(e.target.value)} />

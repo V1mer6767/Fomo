@@ -10,7 +10,7 @@ export default function Events() {
     const inView = (d: Date) => view === "today" ? sameDay(d, now) : view === "tomorrow" ? sameDay(d, new Date(+now + 864e5)) : view === "week" ? d >= t0 && +d - +t0 < 7 * 864e5 : d >= t0 && +d - +t0 < 31 * 864e5;
     return c.events.filter(e => inView(new Date(e.date)) && (!country || e.country === country) && (!imp || e.impact === imp) && (!kind || e.kind === kind)); }, [c.events, view, country, imp, kind]);
   const byDay = list.reduce<Record<string, typeof list>>((m, e) => { const k = new Date(e.date).toDateString(); (m[k] ??= []).push(e); return m; }, {});
-  return (<div className="space-y-4"><h1 className="text-xl font-bold">Global Political & Economic Calendar</h1>
+  return (<div className="space-y-4"><h1 className="text-2xl font-bold tracking-tight">Global Political & Economic Calendar</h1>
     <Banner errors={c.env?.errors} source={c.env?.source} at={c.env?.fetchedAt} />
     <div className="flex flex-wrap gap-2">{["today", "tomorrow", "week", "month"].map(v => <button key={v} className={`btn ${view === v ? "!border-info text-info" : ""}`} onClick={() => setView(v)}>{v}</button>)}
       <select className="inp" value={country} onChange={e => setCountry(e.target.value)}><option value="">All countries</option>{Object.entries(COUNTRY_NAMES).map(([k, n]) => <option key={k} value={k}>{n}</option>)}</select>

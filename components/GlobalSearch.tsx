@@ -21,10 +21,10 @@ export default function GlobalSearch() {
   return (
     <div className="relative w-full max-w-md">
       <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-mute" />
-      <input className="inp w-full !pl-8" placeholder="Search assets, countries, elections, companies, topics…" value={q}
+      <input className="inp w-full !rounded-full !pl-9" placeholder="Search assets, news, countries…" value={q}
         onChange={e => { setQ(e.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)} />
       {open && q.trim().length >= 2 && (
-        <div className="absolute mt-1 w-full card shadow-xl max-h-80 overflow-y-auto z-50">
+        <div className="pop absolute mt-2 w-full min-w-[280px] rounded-2xl border border-info/40 bg-panel shadow-[0_20px_50px_-15px_rgba(139,92,246,.55)] max-h-80 overflow-y-auto z-50">
           {res.length ? res.map((x, i) => <button key={i} className="block w-full text-left px-3 py-2 hover:bg-panel2" onMouseDown={() => { setQ(""); r.push(x.href); }}>
             <div className="text-sm truncate">{x.label}</div><div className="text-[11px] text-mute">{x.sub}</div></button>) : <div className="p-3 text-sm text-mute">{news.loading ? "Searching…" : "No results"}</div>}
         </div>)}

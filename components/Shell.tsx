@@ -1,60 +1,81 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as I from "lucide-react";
 import { NAV } from "@/lib/nav";
 import { useSetting } from "@/lib/storage";
+import { useAlertLog } from "@/lib/userdata";
 import GlobalSearch from "./GlobalSearch";
 import AlertRunner from "./AlertRunner";
+import { PanelProvider } from "./Panel";
+
+type Item = { href: string; label: string };
+const TOP: ({ label: string; href: string } | { label: string; items: Item[] })[] = [
+  { label: "Dashboard", href: "/" },
+  { label: "Live News", href: "/news" },
+  { label: "Markets", items: [{ href: "/assets", label: "Asset Intelligence" }, { href: "/crypto", label: "Cryptocurrency" }, { href: "/forex", label: "Forex" }] },
+  { label: "AI Intelligence", href: "/intelligence" },
+  { label: "Portfolio", href: "/portfolio" },
+  { label: "Global Events", href: "/events" },
+  { label: "More", items: [{ href: "/history", label: "Historical Comparisons" }, { href: "/watchlist", label: "Watchlist" }, { href: "/alerts", label: "Alerts" }, { href: "/settings", label: "Settings" }] },
+];
+
+function Dropdown({ label, items, path }: { label: string; items: Item[]; path: string }) {
+  const [open, setOpen] = useState(false); const ref = useRef<HTMLDivElement>(null);
+  const active = items.some(i => path.startsWith(i.href));
+  useEffect(() => { const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+  useEffect(() => setOpen(false), [path]);
+  return (<div ref={ref} className="relative">
+    <button onClick={() => setOpen(!open)} className={pill(active)} aria-expanded={open}>{label}<I.ChevronDown size={13} className={`transition ${open ? "rotate-180" : ""}`} /></button>
+    {open && <div className="pop absolute left-0 top-full z-50 mt-2 min-w-[210px] rounded-2xl border border-info/40 bg-panel p-1.5 shadow-[0_20px_50px_-15px_rgba(139,92,246,.55)]">
+      {items.map(i => <Link key={i.href} href={i.href} className={`block rounded-xl px-3 py-2 text-sm ${path.startsWith(i.href) ? "bg-info/20 text-fg" : "text-mute hover:bg-panel2 hover:text-fg"}`}>{i.label}</Link>)}</div>}
+  </div>);
+}
+const pill = (a: boolean) => `inline-flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition ${a ? "text-white bg-gradient-to-r from-info to-violet shadow-[0_6px_22px_-6px_rgba(139,92,246,.9)]" : "text-mute hover:text-fg hover:bg-panel2/70"}`;
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const [collapsed, setCollapsed] = useSetting<boolean>("sidebar", false);
   const [theme, setTheme] = useSetting<"dark" | "light">("theme", "dark");
-  const [mobile, setMobile] = useState(false);
+  const [log] = useAlertLog();
+  const [drawer, setDrawer] = useState(false);
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
-  useEffect(() => setMobile(false), [path]);
-  const Icon = (n: string) => { const C = (I as any)[n] ?? I.Circle; return <C size={18} className="shrink-0" />; };
+  useEffect(() => setDrawer(false), [path]);
+  const Icon = (n: string) => { const C = (I as any)[n] ?? I.Circle; return <C size={17} className="shrink-0" />; };
+  const isAct = (h: string) => (h === "/" ? path === "/" : path.startsWith(h));
   return (
-    <div className="min-h-screen flex">
-      {mobile && <div className="fixed inset-0 z-30 bg-black/60 lg:hidden" onClick={() => setMobile(false)} />}
-      <aside className={`fixed lg:sticky top-0 z-40 h-screen border-r border-line bg-panel flex flex-col transition-all
-        ${collapsed ? "lg:w-[64px]" : "lg:w-[236px]"} w-[236px] ${mobile ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
-        <div className="h-14 flex items-center gap-2 px-4 border-b border-line">
-          {collapsed ? <I.TrendingUp size={20} className="mx-auto text-mute" /> : <div className="font-bold tracking-tight">Trade <span className="text-mute font-medium">Info</span></div>}
+    <PanelProvider>
+      <div className="p-2 sm:p-4 lg:p-5">
+        <div className="app-frame mx-auto max-w-[1500px]">
+          <header className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 px-4 pt-4 sm:px-6 sm:pt-5">
+            <button className="lg:hidden btn !px-2.5" onClick={() => setDrawer(true)} aria-label="Menu"><I.Menu size={16} /></button>
+            <Link href="/" className="flex items-center gap-2.5 mr-1">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-info to-pink shadow-[0_6px_20px_-6px_rgba(168,85,247,.9)]"><I.TrendingUp size={19} className="text-white" /></span>
+              <span className="text-[17px] font-bold tracking-tight">Trade <span className="grad-text">Info</span></span>
+            </Link>
+            <nav className="hidden lg:flex items-center gap-1 rounded-full border border-line/70 bg-panel/70 p-1 backdrop-blur">
+              {TOP.map(t => "items" in t ? <Dropdown key={t.label} label={t.label} items={t.items} path={path} /> : <Link key={t.label} href={t.href} className={pill(isAct(t.href))}>{t.label}</Link>)}
+            </nav>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="hidden md:block w-64 xl:w-80"><GlobalSearch /></div>
+              <Link href="/alerts" className="btn relative !px-2.5" aria-label="Alerts"><I.Bell size={15} />{log.length > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-pink ring-2 ring-bg" />}</Link>
+              <button className="btn !px-2.5" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">{theme === "dark" ? <I.Sun size={15} /> : <I.Moon size={15} />}</button>
+              <Link href="/settings" className="btn hidden sm:inline-flex !px-2.5" aria-label="Settings"><I.Settings size={15} /></Link>
+              <Link href="/settings" aria-label="Profile" className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-violet to-pink text-white shadow-[0_6px_18px_-6px_rgba(236,72,153,.8)]"><I.User size={16} /></Link>
+            </div>
+            <div className="md:hidden w-full"><GlobalSearch /></div>
+          </header>
+          {drawer && <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/65 backdrop-blur-sm fade-in" onClick={() => setDrawer(false)} />
+            <aside className="slide-in absolute left-0 top-0 h-full w-72 overflow-y-auto border-r border-info/40 bg-bg p-3">
+              <div className="mb-2 flex items-center justify-between px-2 pt-1"><span className="font-bold">Trade <span className="grad-text">Info</span></span><button className="btn !px-2" onClick={() => setDrawer(false)} aria-label="Close"><I.X size={14} /></button></div>
+              {NAV.map(n => <Link key={n.href} href={n.href} className={`my-0.5 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${isAct(n.href) ? "bg-gradient-to-r from-info to-violet text-white" : "text-mute hover:bg-panel2 hover:text-fg"}`}>{Icon(n.icon)}{n.label}</Link>)}
+            </aside></div>}
+          <main className="relative z-10 p-4 sm:p-6">{children}</main>
+          <footer className="relative z-10 px-6 pb-5 text-[11px] text-mute">Informational only — not investment advice. No trades are executed. Impact analyses are rule-based scenarios, not predictions. Data may be delayed.</footer>
         </div>
-        <nav className="flex-1 overflow-y-auto py-2">
-          {NAV.map(n => {
-            const act = n.href === "/" ? path === "/" : path.startsWith(n.href);
-            return (
-              <Link key={n.href} href={n.href} title={n.label}
-                className={`mx-2 my-0.5 flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${act ? "bg-info/15 text-info" : "text-mute hover:bg-panel2 hover:text-fg"}`}>
-                {Icon(n.icon)}{!collapsed && <span className="truncate">{n.label}</span>}
-              </Link>);
-          })}
-        </nav>
-        <button className="hidden lg:flex m-2 items-center gap-2 rounded-lg px-3 py-2 text-xs text-mute hover:bg-panel2"
-          onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <I.PanelLeftOpen size={16} /> : <><I.PanelLeftClose size={16} /> Collapse</>}
-        </button>
-      </aside>
-      <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-20 h-14 border-b border-line bg-bg/85 backdrop-blur flex items-center gap-3 px-3 sm:px-5">
-          <button className="lg:hidden btn !px-2" onClick={() => setMobile(true)} aria-label="Menu"><I.Menu size={16} /></button>
-          <GlobalSearch />
-          <div className="ml-auto flex items-center gap-2">
-            <button className="btn !px-2" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">
-              {theme === "dark" ? <I.Sun size={15} /> : <I.Moon size={15} />}
-            </button>
-          </div>
-        </header>
-        <main className="p-3 sm:p-5 max-w-[1500px] w-full mx-auto">{children}</main>
-        <footer className="px-5 pb-6 text-[11px] text-mute">
-          Informational only — not investment advice. No trades are executed. Impact analyses are rule-based scenarios, not predictions. Data may be delayed.
-        </footer>
       </div>
       <AlertRunner />
-    </div>
+    </PanelProvider>
   );
 }

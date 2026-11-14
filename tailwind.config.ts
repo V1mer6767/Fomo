@@ -5,7 +5,7 @@ export default {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
   theme: { extend: { colors: {
     bg: v("bg"), panel: v("panel"), panel2: v("panel2"), line: v("line"),
-    fg: v("fg"), mute: v("mute"), up: v("up"), down: v("down"), warn: v("warn"), info: v("info"),
+    fg: v("fg"), mute: v("mute"), up: v("up"), down: v("down"), warn: v("warn"), info: v("info"), violet: v("violet"), pink: v("pink"), cyan: v("cyan"),
   }, fontFamily: { sans: ["Inter","system-ui","sans-serif"], mono: ["ui-monospace","SFMono-Regular","Menlo","monospace"] } } },
   plugins: [],
 } satisfies Config;

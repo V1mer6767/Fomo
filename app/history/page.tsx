@@ -14,7 +14,7 @@ function Row({ e }: { e: FomcEvent }) {
 }
 export default function History() {
   const l = useApi<{ events: FomcEvent[]; sourceUrl: string }>("/api/historical");
-  return (<div className="space-y-4"><h1 className="text-xl font-bold">Historical Comparisons — FOMC decisions</h1>
+  return (<div className="space-y-4"><h1 className="text-2xl font-bold tracking-tight">Historical Comparisons — FOMC decisions</h1>
     <div className="rounded-lg border border-warn/40 bg-warn/10 p-3 text-xs text-warn">Past reactions are computed from real daily closing prices supplied by the data providers. They are descriptive only: they do not predict future moves and cannot isolate the Fed decision from other news that day. Daily closes miss intraday swings. Where a provider lacks history (e.g. free crypto history is limited to ~1 year), values show “—”.</div>
     {l.loading ? <Loading /> : <div className="card">{l.env?.data.events.slice().reverse().map(e => <Row key={e.date} e={e} />)}</div>}
     {l.env && <p className="text-[11px] text-mute">Decision list compiled from <a className="text-info" href={l.env.data.sourceUrl} target="_blank" rel="noopener noreferrer">federalreserve.gov</a>; verify before relying on it.</p>}</div>);
