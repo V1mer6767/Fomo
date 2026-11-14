@@ -31,7 +31,7 @@ export function createCloudStore(adapter: CloudAdapter, onError?: (e: Error) => 
       cache.set(k, v); emit(k); dirty.add(k); clearTimeout(timers.get(k)); timers.set(k, setTimeout(() => save(k), 400));
     },
     async hydrate() {
-      await Promise.all(adapter.keys.map(async k => { try { const v = await adapter.load(k); if (v !== undefined) cache.set(k, v); } catch (e: any) { onError?.(e); } }));
+      await Promise.all(adapter.keys.map(async k => { try { const v = await adapter.load(k); if (v !== undefined && !dirty.has(k)) cache.set(k, v); } catch (e: any) { onError?.(e); } }));
       adapter.keys.forEach(emit);
     },
     async flush() { await Promise.all([...dirty].map(k => { clearTimeout(timers.get(k)); return save(k, 3); })); },

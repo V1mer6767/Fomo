@@ -52,6 +52,14 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     return () => sub.subscription.unsubscribe();
   }, [attach, teardown]);
 
+  // Pull changes made on other devices when this tab regains focus (at most every 10s).
+  useEffect(() => {
+    if (!isConfigured) return; let last = Date.now();
+    const pull = () => { if (document.visibilityState !== "visible" || Date.now() - last < 10_000) return; last = Date.now(); void cloud.current?.hydrate(); };
+    document.addEventListener("visibilitychange", pull); window.addEventListener("focus", pull);
+    return () => { document.removeEventListener("visibilitychange", pull); window.removeEventListener("focus", pull); };
+  }, []);
+
   const signOut = useCallback(async () => {
     try { await cloud.current?.flush(); } catch {}
     if (isConfigured) await supabaseBrowser().auth.signOut();
